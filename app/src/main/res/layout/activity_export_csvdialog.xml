@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    tools:context="berthold.funwithregex.ExportCSVDialogActivity">
+
+    <!-- This is a "fake layout" which surpresses keyboard to pop up -->
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/transparent"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:background="@color/colorShellOutput"
+        android:orientation="vertical"
+        android:id="@+id/linearLayout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:textColor="@color/colorSepparator"
+            android:text="@string/csv_intro"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/colorSepparator"
+            android:layout_height="5dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp"
+            android:textColor="@color/shellText"
+            android:text="@string/csv_choose_seperator"/>
+
+        <EditText
+            android:id="@+id/csv_separator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=";"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/colorSepparator"
+            android:layout_height="5dp"/>
+
+        <ImageButton
+            android:id="@+id/save_csv_localy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_save"/>
+
+        <ProgressBar
+            android:id="@+id/exportCSV"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        </LinearLayout>
+    </android.support.design.widget.CoordinatorLayout>

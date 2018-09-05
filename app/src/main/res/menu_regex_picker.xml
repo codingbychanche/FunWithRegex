@@ -1,0 +1,52 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="berthold.funwithregex.RegexPicker">
+
+    <!-- Main -->
+    <item
+        android:id="@+id/action_search"
+        android:title="suche"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView"/>
+
+    <item android:id="@+id/about" android:orderInCategory="100"
+        android:title="Filter"
+        app:showAsAction="never">
+
+        <!-- Submenu of "Filter" -->
+        <menu>
+            <item android:id="@+id/filter_only_eval"
+                android:title="Zeige nur bewertete Regex" />
+            <item android:id="@+id/filter_only_today"
+                android:title="Zeige alle heute erstellten Regex" />
+        </menu>
+    </item>
+
+    <item android:id="@+id/sort_by" android:orderInCategory="101"
+        android:title="Sortiere nach...">
+
+        <!-- Submenu of "sort_by" -->
+        <menu>
+            <item android:id="@+id/order_by_rating"
+                android:title="Sortiere nach Bewertung" />
+
+            <item android:id="@+id/order_by_date"
+                android:title="Nach Datum" />
+
+        </menu>
+    </item>
+
+    <!-- Main menue again....-->
+
+    <item android:id="@+id/sorting_order" android:orderInCategory="102"
+        android:icon="@android:drawable/ic_menu_sort_alphabetically"
+        app:showAsAction="ifRoom|collapseActionView"
+        android:title="@string/sort"/>
+
+    <item android:id="@+id/export_csv" android:orderInCategory="103"
+        app:showAsAction="never"
+        android:title="@string/export_csv"/>
+
+</menu>

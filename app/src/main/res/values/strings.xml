@@ -1,0 +1,98 @@
+<resources>
+    <string name="app_name">Fun With Regex</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Main Activity -->
+    <string name="regexinfo">Deine Regex</string>
+
+    <string name="switchertrue">Ganzer Text</string>
+    <string name="switcherfalse">Ergebnisse</string>
+
+    <string name="sampletext">07245-2701  berthold.fritz@hotmail.com</string>
+    <string name="errormessage">Meldungen</string>
+
+    <string name="nothing_changed_nothing_saved">Nicht geändert, nichts zum speichern da!</string>
+    <string name="regex_empty">Keine Regex zum speichern da!</string>
+
+    <string name="dbloaded">Datenbank erfolgreich geöffnet....</string>
+    <string name="title_activity_regex_picker">Regex Zoo, wähle....</string>
+
+    <string name="back_button_warning">Wenn Sie nocheinmal auf BACK drücken, wird die APP verlassen, alle nicht gespeicherten Daten gehen verloren....</string>
+
+    <string name="delete_regex_dialog">Regex geändert, aber nicht gespeichert. Möchten Sie diese Regex wirklich löschen?</string>
+    <string name="yes_button">Löschen!</string>
+    <string name="no_button">Nicht löschen!</string>
+
+    <!-- Menu -->
+
+    <string name="load">Text laden</string>
+    <string name="save">Text speichern/ senden</string>
+    <string name="about">Info....</string>
+
+    <!-- About -->
+
+    <string name="titel_info">Info</string>
+
+    <string name="num_of_saved_regexes">Regexen gespeichert:</string>
+
+    <string name="info">Berthold Fritz 2017</string>
+    <string name="licence"> Fun With Regex!
+                            Deine Regex Bibliothek in der Hosentasche. Texte Laden, Regex testen,
+                            bewährte Regex speichern, organisieren oder versenden.
+
+                            Sie dürfen diese App frei nutzen und weitergeben. Der Komerzielle
+                            Vertrieb wird hiermit <ustrikt /> untersagt.</string>
+
+    <string name="cc_by">This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+    https://creativecommons.org/licenses/by-nc-sa/4.0/</string>
+
+    <string name="title_activity_settings">Settings</string>
+    <string name="databaseInfo">Inhalt:</string>
+
+    <!-- Pick Regex -->
+
+    <string name="no_entry"> Keine Einträge </string>
+    <string name="title_activity_insert_regex_in_db">Regex speichern...</string>
+    <string name="filter">Filter></string>
+    <string name="sort">Sortieren auf/ absteigend</string>
+    <string name="export_csv">Datenbank als CSV- Datei exportieren</string>
+
+    <!-- Insert regex into DB -->
+
+    <string name="regex_description"> Beschreiben Sie ihr Werk hier :-)</string>
+    <string name="new_regex">Neu</string>
+    <string name="update_regex">Update</string>
+    <string name="entry_updated">Regex aktuallisiert....</string>
+    <string name="regex_saved">Regex gespeichert....</string>
+    <string name="new_entry_or_update">Möchten Sie einen Neuen Eintrag anlegen oder den bestehenden Eintrag aktualli</string>
+    <string name="update_entry">Aktualisieren</string>
+    <string name="new_entry">Neu anlegen</string>
+
+    <!-- File Chooser -->
+
+    <string name="titel_file_chooser">Datei auswählen</string>
+    <string name="really_save">Möchten Sie diese Datei wirklich speichern?</string>
+    <string name="yes">Ja</string>
+    <string name="no">no</string>
+
+    <!-- Save Dialog -->
+
+    <string name="titel_save_dialog">Text/ Ergebnisse senden</string>
+    <string name="save_dialog">Dateiname:</string>
+    <string name="save_attach_regex">Regex an Datei anhängen. Schreibt die aktuell verwendete
+    Regex als Titel über den gespeicherten Text.</string>
+    <string name="save_attach_result">Ergebnis Text anhängen. Hängt, falls vorhanden, das letzte
+    Suchergebnis an den gespeicherten Text an. </string>
+    <string name="text_saved">Text gespeichrt.....</string>
+    <string name="save_sample_text_hint">Vorschau</string>
+
+    <!-- Export csv- dialog -->
+
+    <string name="titel_export_csv">CSV- Export</string>
+    <string name="csv_choose_seperator">CSV- Spaltentrennung:</string>
+    <string name="csv_intro">   Exportiert den Inhalt der Datanbank in eine CSV- Datei (Komagetrennte Werte).
+                                Solche Dateien können
+                                von den meisten Tabellenkalkulations Programmen importiert und weiterverarbeitet werden.
+                                Als CSV- Spaltentrenner benutzen Sie bitte den unten vorgeschlagenen.</string>
+    <string name="no_sepparator">Kein Spalten- Trenner eingegeben</string>
+</resources>

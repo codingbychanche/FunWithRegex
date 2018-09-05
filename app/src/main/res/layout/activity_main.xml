@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/colorShellOutput"
+    tools:context="berthold.funwithregex.MainActivity">
+
+    <!-- This is a "fake layout" which surpresses keyboard to pop up -->
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/transparent"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+    </LinearLayout>
+
+    <!-- Layout starts here -->
+
+    <!-- Action Bar -->
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="horizontal"
+            android:paddingBottom="1dp"
+            android:paddingTop="65dp">
+
+            <ImageButton
+                android:id="@+id/delete_text"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryDark"
+                android:paddingLeft="10dp"
+                android:scaleX=".8"
+                android:scaleY=".8"
+                android:src="@android:drawable/ic_menu_delete"
+                android:transformPivotX="0dp"
+                android:transformPivotY="0dp" />
+
+            <ImageButton
+                android:id="@+id/magnify_text"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryDark"
+                android:paddingLeft="10dp"
+                android:scaleX=".8"
+                android:scaleY=".8"
+                android:src="@android:drawable/arrow_up_float"
+                android:transformPivotX="0dp"
+                android:transformPivotY="0dp" />
+
+
+            <ImageButton
+                android:id="@+id/shrink_text"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryDark"
+                android:paddingLeft="10dp"
+                android:scaleX=".8"
+                android:scaleY=".8"
+                android:src="@android:drawable/arrow_down_float"
+                android:transformPivotX="0dp"
+                android:transformPivotY="0dp" />
+
+            <ImageButton
+                android:id="@+id/remove_result"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryDark"
+                android:paddingLeft="10dp"
+                android:scaleX=".8"
+                android:scaleY=".8"
+                android:src="@android:drawable/ic_menu_revert"
+                android:transformPivotX="0dp"
+                android:transformPivotY="0dp" />
+
+            <Switch
+                android:id="@+id/switchresult"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="left"
+                android:background="@color/colorPrimaryDark"
+                android:paddingLeft="10dp"
+                android:scaleX=".8"
+                android:scaleY=".8"
+                android:shadowColor="@color/shellText"
+                android:text="Passende Muster im Text markieren" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight=".9"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <!--This layout leads to a better performance of the 'EditText' view.
+                Instead of scrolling the contents of the 'EditText' we scroll the whole
+                layout inside the 'scrollView' -->
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorShellOutput">
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorShellOutput">
+
+                    <EditText
+                        android:id="@+id/test_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorShellOutput"
+                        android:paddingLeft="10dp"
+                        android:textColor="@color/shellText" />
+
+                    <!--    A neat little trick here: This EditText overlaps the one
+                            before. Visibility is set programmaticaly. This way
+                            it is possible to switch between the two views -->
+
+                    <EditText
+                        android:id="@+id/just_the_result"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorShellOutput"
+                        android:paddingLeft="10dp"
+                        android:textColor="@color/shellText" />
+
+                </RelativeLayout>
+            </ScrollView>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/colorSepparator"
+            android:layout_height="5dp"/>
+
+        <TextView
+            android:id="@+id/messages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorShellOutput"
+            android:paddingLeft="10dp"
+            android:textColor="@color/shellText"
+            android:textSize="12dp" />
+
+        <View
+            android:id="@+id/line_below_message"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_below="@id/messages"
+            android:background="@color/colorSepparator" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorShellOutput"
+            android:layout_weight=".1"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/the_regex"
+                android:paddingLeft="10dp"
+                android:textStyle="bold"
+                android:textSize="15dp"
+                android:hint="@string/regexinfo"
+                android:layout_width="match_parent"
+                android:background="@color/colorShellOutput"
+                android:textColor="@color/shellText"
+                android:layout_height="match_parent"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/colorSepparator"
+            android:layout_height="5dp"/>
+
+        <!-- Input and edit 'regex' field -->
+        <!--    Pivot: Set it to top, left corner Scale whole layout...-->
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+        android:background="@color/colorPrimaryDark"
+            android:columnCount="6">
+
+            <ImageButton
+                android:id="@+id/run"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:src="@android:drawable/ic_media_play"/>
+
+            <ImageButton
+                android:id="@+id/insert_regex_into_db"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:src="@android:drawable/ic_menu_save"/>
+
+            <ImageButton
+                android:id="@+id/insert_regex_from_db"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:src="@android:drawable/ic_input_get" />
+
+
+            <ImageButton
+                android:id="@+id/deleteRegexInput"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:src="@android:drawable/ic_menu_delete"/>
+
+            <Button
+                android:id="@+id/caret"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="^"/>
+
+            <Button
+                android:id="@+id/bracket"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="[..]"/>
+
+            <Button
+                android:id="@+id/hyphen"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="-"/>
+
+            <Button
+                android:id="@+id/curly"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="{..}"/>
+
+            <Button
+                android:id="@+id/comma"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text=","/>
+
+            <Button
+                android:id="@+id/para"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="(..)"/>
+
+            <Button
+                android:id="@+id/backshlash"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="\\"/>
+
+            <Button
+                android:id="@+id/forwardshlash"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:text="\ /"/>
+
+        </GridLayout>
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ AndroidManifest.xml
+  ~
+  ~ Created by Berthold Fritz
+  ~
+  ~ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+  ~ https://creativecommons.org/licenses/by-nc-sa/4.0/
+  ~
+  ~ Last modified 9/3/18 8:33 AM
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="berthold.funwithregex">
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Activity's -->
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".RegexPicker"
+            android:label="@string/title_activity_regex_picker"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".InsertRegexInDB"
+            android:label="@string/title_activity_insert_regex_in_db"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <activity android:name=".FileChooserDeluxe">
+            android:name=".FileChooser"
+            android:label="@string/titel_activity_file_cooser"
+            android:theme="@style/AppTheme.NoActionBar" />
+        </activity>
+
+        <activity
+            android:name=".SaveDialog"
+            android:label="@string/titel_save_dialog" />
+
+        <activity
+            android:name=".About"
+            android:label="@string/about" />
+        <!--
+        <activity android:name=".ExportCSVDialogActivity"
+            android:label="@string/titel_export_csv" />
+            -->
+
+    </application>
+
+</manifest>
