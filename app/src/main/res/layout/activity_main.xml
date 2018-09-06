@@ -55,11 +55,7 @@
                 android:layout_height="match_parent"
                 android:background="@color/colorPrimaryDark"
                 android:paddingLeft="10dp"
-                android:scaleX=".8"
-                android:scaleY=".8"
-                android:src="@android:drawable/ic_menu_delete"
-                android:transformPivotX="0dp"
-                android:transformPivotY="0dp" />
+                android:src="@android:drawable/ic_menu_delete"/>
 
             <ImageButton
                 android:id="@+id/magnify_text"
@@ -276,13 +272,13 @@
                 android:text="(..)"/>
 
             <Button
-                android:id="@+id/backshlash"
+                android:id="@+id/backslash"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
                 android:text="\\"/>
 
             <Button
-                android:id="@+id/forwardshlash"
+                android:id="@+id/forwardslash"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
                 android:text="\ /"/>

@@ -20,6 +20,7 @@
     <string name="back_button_warning">Wenn Sie nocheinmal auf BACK drücken, wird die APP verlassen, alle nicht gespeicherten Daten gehen verloren....</string>
 
     <string name="delete_regex_dialog">Regex geändert, aber nicht gespeichert. Möchten Sie diese Regex wirklich löschen?</string>
+    <string name="delete_text_dialog">Der text wurde geändert, aber nicht gespeichert. Möchten Sie den Text wirklich löschen?</string>
     <string name="yes_button">Löschen!</string>
     <string name="no_button">Nicht löschen!</string>
 

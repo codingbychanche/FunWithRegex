@@ -67,11 +67,14 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     ProgressBar     searchProgress;
     ImageButton     run;
     ImageButton     delteText;
+    ImageButton     magnifyText;
+    ImageButton     shrinkText;
     EditText        theRegex;
     ImageButton     delRegex;
     EditText        testText;
     EditText        justResult;
     TextView        messageText;
+    ImageButton     removeHighlights;
     View            lineBelowMessage;
 
     Switch          textViewSwitcher;
@@ -83,10 +86,15 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     Button          insertCurlys;
     Button          insertComma;
     Button          insertBracket;
+    Button          insertCarret;
+    Button          insertBackSlash;
+    Button          insertFwdSlash;
 
     // For your convenience
     private boolean regexWasSaved;      // If true, regex was saved and can be deleted without bothering the user by asking...
     private boolean textWasSaved;       // If true, text was saved and can be deleted...... same as with regex
+
+    private float   textSize;           // Text size
 
     // Settings
     private String workingDir="/";
@@ -101,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
 
     // Req- codes for 'FragmentCustomDialogYesNo'
     public static final int DELETE_REGEX=3;
+    public static final int DELETE_TEXT=4;
 
     // Async tasks
     LoadText loader;
@@ -134,6 +143,9 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         // Will be set to true, when saved.
         regexWasSaved=true;
         textWasSaved=true;
+
+        // Text size
+        textSize=10;
 
         // Get instance state
         if (savedInstanceState!=null) {
@@ -177,9 +189,11 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         testText=(EditText)findViewById(R.id.test_text);
 
         delteText=(ImageButton)findViewById(R.id.delete_text);
-
         textViewSwitcher=(Switch)findViewById(R.id.switchresult);
         textViewSwitcher.setChecked(true);
+        removeHighlights=(ImageButton)findViewById(R.id.remove_result);
+        magnifyText=(ImageButton)findViewById(R.id.magnify_text);
+        shrinkText=(ImageButton)findViewById(R.id.shrink_text);
 
         justResult=(EditText)findViewById(R.id.just_the_result);
         justResult.setVisibility(View.GONE);  // Vissible or not depents on 'textSwitcher'
@@ -197,6 +211,9 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         insertPara=(Button)findViewById(R.id.para);
         insertComma=(Button)findViewById(R.id.comma);
         insertBracket=(Button)findViewById(R.id.bracket);
+        insertBackSlash=(Button)findViewById(R.id.backslash);
+        insertFwdSlash=(Button)findViewById(R.id.forwardslash);
+        insertCarret=(Button)findViewById(R.id.caret);
     }
 
     /**
@@ -209,7 +226,6 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         super.onResume();
         Log.v(tag,"On Resume.....");
 
-
         // Hide message window as there is no message to be shown yet...
         // Vissibility will be set when there is something to output...
         hideMessageWindow();
@@ -220,13 +236,13 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         if (textViewSwitcher.isChecked()) textViewSwitcher.setText(switcherTrue);
         else textViewSwitcher.setText(switcherFalse);
 
-        // Delete text
-        delteText.setOnClickListener(new View.OnClickListener() {
+        testText.setTextSize(textSize);
+
+        // Remove highlight's from text
+        removeHighlights.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                stopAllTasks();
-                testText.setText(" ");
-                justResult.setText(" ");
+            public void onClick(View view) {
+                removeHighlightFromTestText();
             }
         });
 
@@ -243,6 +259,21 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                     justResult.setVisibility(View.VISIBLE);
                     testText.setVisibility(View.GONE);
                 }
+            }
+        });
+
+        // Text size
+        magnifyText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                testText.setTextSize(textSize++);
+            }
+        });
+
+        shrinkText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (textSize>5) testText.setTextSize(textSize--);
             }
         });
 
@@ -284,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             @Override
             public void onClick(View v) {
 
-                if(!regexWasSaved) {
+                if(!regexWasSaved && !theRegex.getText().toString().isEmpty()) {
                     FragmentManager fm = getSupportFragmentManager();
                     FragmentCustomDialogYesNo fragmentDeleteRegex =
                             FragmentCustomDialogYesNo.newInstance(DELETE_REGEX,
@@ -295,6 +326,26 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                     fragmentDeleteRegex.show(fm, "fragment_dialog");
                 } else{
                     deleteRegex();
+                }
+            }
+        });
+
+        // Delete text
+        delteText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(!textWasSaved && !testText.getText().toString().isEmpty()) {
+                    FragmentManager fm = getSupportFragmentManager();
+                    FragmentCustomDialogYesNo fragmentDeleteRegex =
+                            FragmentCustomDialogYesNo.newInstance(DELETE_TEXT,
+                                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,
+                                    null, getResources().getString(R.string.delete_text_dialog),
+                                    getResources().getString(R.string.yes_button),
+                                    getResources().getString(R.string.no_button));
+                    fragmentDeleteRegex.show(fm, "fragment_dialog");
+                } else{
+                    deleteText();
                 }
             }
         });
@@ -324,6 +375,22 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             public void onClick(View v) {
                 theRegex.getText().insert(theRegex.getSelectionStart(),"[]");
                 theRegex.setSelection(theRegex.getSelectionStart()-1);
+            }
+        });
+
+        // Insert backslash
+        insertBackSlash.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                theRegex.getText().insert(theRegex.getSelectionStart(),"\\");
+            }
+        });
+
+        // Insert forwardslash
+        insertFwdSlash.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                theRegex.getText().insert(theRegex.getSelectionStart(), "/");
             }
         });
 
@@ -357,6 +424,27 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             public void afterTextChanged(Editable editable) {
             }
         });
+
+        // TestText
+        testText.addTextChangedListener(new TextWatcher() {
+
+            // Android documentation advises: Do not change charSequence from here!
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            // Android documentation advises: Do not change charSequence from here!
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                textWasSaved=false; // Regex changed, allow to prevent user from deleting the text by mistake
+            }
+
+            // Android documentation tells, that you may change the editable from here!
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
     }
 
     /**
@@ -380,6 +468,12 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                    deleteRegex();
                 }
                 break;
+
+            // Delte text?
+            case DELETE_TEXT:
+                if(buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)){
+                    deleteText();
+                }
         }
     }
 
@@ -482,6 +576,8 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
 
                 loader=new LoadText(testText,messageText,searchProgress,path);
                 loader.execute();
+
+                textWasSaved=true;
             }
         }
         if (resCode==RESULT_OK && reqCode==GET_REGEX){
@@ -506,6 +602,17 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         messageText.setText("");
         hideMessageWindow();
         removeHighlightFromTestText();
+    }
+
+    /**
+     * Delete text
+     */
+
+    private void deleteText(){
+
+        stopAllTasks();
+        testText.setText(" ");
+        justResult.setText(" ");
     }
 
     /**
