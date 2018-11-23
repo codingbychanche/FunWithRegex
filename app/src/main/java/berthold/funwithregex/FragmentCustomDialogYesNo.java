@@ -12,11 +12,12 @@ package berthold.funwithregex;
  */
 
 /**
- * Shows a dialog containing an bitmap, editText and two buttons (yes/ no)
+ * @rem: Shows a dialog containing an bitmap, editText and two buttons (yes/ no)@@
  * Bitmap and buttons can be customized.
  */
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -40,32 +41,34 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
     Button      okButton;
     Button      cancelButton;
 
-    int reqCode;            // Identifies the fragment in callback method of calling activity
-    getDataFromFragment gf; // The Interface delivering data from the fragment....
+    int reqCode;                       // Identifies the fragment in callback method of calling activity
+    int data;                          // Data (e.g. key1 if database operation...)
+    getDataFromFragment gf;            // The Interface delivering data from the fragment....
 
     // Display options for the dialog
     //
-    // Standart is: Display no editText and a two buttons = 'SHOW_AS_YES_NO_DIALOG'
+    // Standard is: Display no editText and a two buttons = 'SHOW_AS_YES_NO_DIALOG'
     // if you pass this parameter or '0'
     // If you need the editText pass 'SHOW_WITH_EDIT_TEXT'
     // If you need a only a confirm dialog pass 'SHOW_CONFIRM_DIALOG'
     // If you need a confirm dialog + editText pass 'SHOW_WITH_EDIT_TEXT+SHOW_CONFIRM_DIALOG'
 
     private int options;
-    public static final int SHOW_AS_YES_NO_DIALOG=0;  // Show Text and two buttons (confirm/ cancel)
-    public static final int SHOW_WITH_EDIT_TEXT=1; // Allow text input
-    public static final int SHOW_CONFIRM_DIALOG=2; // Disply only one confirm button
+    public static final int SHOW_AS_YES_NO_DIALOG=0;    // Show Text and two buttons (confirm/ cancel)
+    public static final int SHOW_WITH_EDIT_TEXT=1;      // Allow text input
+    public static final int SHOW_CONFIRM_DIALOG=2;      // Disply only one confirm button
 
     // Return parameters
     public static final String BUTTON_OK_PRESSED="OK";
     public static final String BUTTON_CANCEL_PRESSED="CANCEL";
+    public static final int    NO_DATA_REQUIERED=-1;
 
     // Empty Constructor!
     public FragmentCustomDialogYesNo(){
         // Constructor must be empty....
     }
 
-    public static FragmentCustomDialogYesNo newInstance (int reqCode,int options,Bitmap icon, String dialogText, String yesText, String noText){
+    public static FragmentCustomDialogYesNo newInstance (int reqCode,int options,int data,Bitmap icon, String dialogText, String yesText, String noText){
         FragmentCustomDialogYesNo frag=new FragmentCustomDialogYesNo();
         Bundle args=new Bundle();
         args.putInt("reqCode",reqCode);
@@ -74,6 +77,8 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
         args.putString("dialogText",dialogText);
         args.putString("yesText",yesText);
         args.putString("noText",noText);
+        args.putInt("data",data);
+
         frag.setArguments(args);
         return frag;
     }
@@ -84,7 +89,7 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
     // this fragment to it's activity
     //
     public interface getDataFromFragment{
-        void getDialogInput(int reqCode,String dialogText, String buttonPressed);
+        void getDialogInput(int reqCode,int data,String dialogText, String buttonPressed);
     }
 
     // get interface Object...
@@ -96,6 +101,7 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
         super.onAttach(activity);
         gf=(getDataFromFragment) activity;
     }
+
 
     // Inflate fragment layout
     @Override
@@ -139,8 +145,9 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
                 cancelButton.setVisibility(View.GONE);
 
         dialogText.setText(getArguments().getString("dialogText"));
-        okButton.setText(getArguments().getString("okText"));
+        okButton.setText(getArguments().getString("yesText"));
         cancelButton.setText(getArguments().getString("noText"));
+        data=getArguments().getInt("data");
 
         // When Ok Button is pressed, finish fragment and return text....
         okButton.setOnClickListener(new View.OnClickListener() {
@@ -152,7 +159,7 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
                 //
                 // The caling activity must implement this fragments interface!
 
-                gf.getDialogInput(reqCode,dialogTextInput.getText().toString(),BUTTON_OK_PRESSED);
+                gf.getDialogInput(reqCode,data,dialogTextInput.getText().toString(),BUTTON_OK_PRESSED);
                 dismiss();
             }
         });
@@ -161,7 +168,7 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                gf.getDialogInput(reqCode,"Cancel Button was pressed.....",BUTTON_CANCEL_PRESSED);
+                gf.getDialogInput(reqCode,NO_DATA_REQUIERED,"Cancel Button was pressed.....",BUTTON_CANCEL_PRESSED);
                 dismiss();
             }
         });

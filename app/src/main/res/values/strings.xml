@@ -21,8 +21,17 @@
 
     <string name="delete_regex_dialog">Regex geändert, aber nicht gespeichert. Möchten Sie diese Regex wirklich löschen?</string>
     <string name="delete_text_dialog">Der text wurde geändert, aber nicht gespeichert. Möchten Sie den Text wirklich löschen?</string>
+
+    <string name="update_regex_dialog">Möchten Sie die Regex als neuen Eintrag speichern oder den bestehenden Eintrag aktuallisieren?</string>
+    <string name="update_button">Aktuallisieren</string>
+    <string name="new_entry_button">Neuer Eintrag</string>
+
+
     <string name="yes_button">Löschen!</string>
     <string name="no_button">Nicht löschen!</string>
+
+    <string name="leave_warning">Wenn Sie das nächste mal Back drücken, wird diese App verlassen. Nicht gespeicherte Daten gehen verloren.</string>
+
 
     <!-- Menu -->
 
@@ -65,7 +74,7 @@
     <string name="update_regex">Update</string>
     <string name="entry_updated">Regex aktuallisiert....</string>
     <string name="regex_saved">Regex gespeichert....</string>
-    <string name="new_entry_or_update">Möchten Sie einen Neuen Eintrag anlegen oder den bestehenden Eintrag aktualli</string>
+    <string name="new_entry_or_update">Möchten Sie einen Neuen Eintrag anlegen oder den bestehenden Eintrag aktuallisieren?</string>
     <string name="update_entry">Aktualisieren</string>
     <string name="new_entry">Neu anlegen</string>
 
@@ -96,4 +105,10 @@
                                 von den meisten Tabellenkalkulations Programmen importiert und weiterverarbeitet werden.
                                 Als CSV- Spaltentrenner benutzen Sie bitte den unten vorgeschlagenen.</string>
     <string name="no_sepparator">Kein Spalten- Trenner eingegeben</string>
+    <string name="confirm_dialog_overwrite">Möchten Sie die folgende Datei überschreiben?</string>
+    <string name="confirm_dialog_save_at">Möchten Sie die CSV- Tabelle hier speichern?</string>
+    <string name="confirm_overwrite">Datei ersetzen</string>
+    <string name="confirm_save_at">Datei speichern</string>
+    <string name="cancel_save">Nicht speichern</string>
+
 </resources>

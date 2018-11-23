@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:background="@color/colorPrimaryDark"
             android:orientation="horizontal"
-            android:paddingBottom="1dp"
+            android:paddingBottom="5dp"
             android:paddingTop="65dp">
 
             <ImageButton
@@ -98,13 +98,12 @@
                 android:id="@+id/switchresult"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_gravity="left"
+                android:layout_gravity="right"
                 android:background="@color/colorPrimaryDark"
                 android:paddingLeft="10dp"
                 android:scaleX=".8"
                 android:scaleY=".8"
-                android:shadowColor="@color/shellText"
-                android:text="Passende Muster im Text markieren" />
+                android:shadowColor="@color/shellText"/>
 
         </LinearLayout>
 

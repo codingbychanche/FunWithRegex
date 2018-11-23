@@ -8,27 +8,18 @@ package berthold.funwithregex;
  * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
  * https://creativecommons.org/licenses/by-nc-sa/4.0/
  *
- * Last modified 3/23/18 10:12 PM
+ * Last modified 11/1/18 10:20 AM
  */
 
 /**
  * Test your favourite regex...
  */
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.ContactsContract;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Environment;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.Spannable;
@@ -92,24 +83,35 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
 
     // For your convenience
     private boolean regexWasSaved;      // If true, regex was saved and can be deleted without bothering the user by asking...
+    private boolean regexInsertFromDB;  // If true, regex was just taken from db.
+                                        // When save- button is pressed, app asks if you want to update the
+                                        // existing entry or if you wan't to create a new one
+                                        // If false, a new entry will be created....
+
+
     private boolean textWasSaved;       // If true, text was saved and can be deleted...... same as with regex
 
-    private float   textSize;           // Text size
+    private int     key1;               // primary key for the regex picked from DB
 
-    // Settings
-    private String workingDir="/";
+    private int timesBackPressed;       // Prevent user from accidentially leave the app
+
+    private float   textSize;           // Text size
 
     // DB
     String                         path;
     static public Connection       conn; // Database holding our regex'es.....
 
     // Req- codes
-    public static final int LOAD_TEXT=1;    // Request Code for file picker
-    public static final int GET_REGEX=2;    // Get a regex from DB
+    public static final int LOAD_TEXT=1; // Request Code for file picker
+    public static final int SAVE_TEXT=2; // Save text to file
+    public static final int GET_REGEX=3; // Get a regex from DB
 
     // Req- codes for 'FragmentCustomDialogYesNo'
     public static final int DELETE_REGEX=3;
     public static final int DELETE_TEXT=4;
+    public static final int UPDATE_REGEX=5;
+
+    public static final int NOT_REQUIERED=-1;
 
     // Async tasks
     LoadText loader;
@@ -117,6 +119,10 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
 
     // Debug
     String          tag;
+
+    // File system
+    public static File workingDir;
+    public String appDir="/";       // App's working dir..
 
     /**
      * On Create
@@ -127,6 +133,9 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // Debug
+        tag="Debug: Main";
+
         Log.v(tag,"On Create...");
 
         // Init...
@@ -135,21 +144,28 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Debug
-        tag="Debug: Main";
-
         // Init...
         // Those two will be set to 'false' when changed.....
         // Will be set to true, when saved.
         regexWasSaved=true;
         textWasSaved=true;
 
-        // Text size
-        textSize=10;
+        // Current regex was not insert from DB to edit. It is a new one and a new
+        // entry will be created when the user presses the save- button.
+        regexInsertFromDB=false;
+        key1=-1;
 
-        // Get instance state
+        // If back- buttom was pressed once, warn the user that he meight loose data if he presses again....
+        // If back- button was pressed more than once, leave the app!
+        timesBackPressed=0;
+
+        // Text size
+        textSize=20;
+
+        // @rem:Get instance state@@
         if (savedInstanceState!=null) {
             regexWasSaved = savedInstanceState.getBoolean("regexWasSaved");
+            regexInsertFromDB=savedInstanceState.getBoolean("regexInsertFromDB");
             textWasSaved = savedInstanceState.getBoolean("textWasSaved");
         }
 
@@ -182,6 +198,16 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             Log.d(tag, "Error opening DB\n");
             Log.d(tag, e.toString());
         }
+
+        // File system
+        //
+        // @rem:Filesystem, creates public folder in the devices externalStorage dir...@@
+        //
+        // This seems to be the best practice. It creates a public folder.
+        // This folder will not be deleted when the app is de- installed
+        workingDir= Environment.getExternalStoragePublicDirectory(appDir);
+        Log.v("---Working dir",workingDir.getAbsolutePath());
+        workingDir.mkdirs(); // Create dir, if it does not already exist
 
         // UI
         theRegex=(EditText)findViewById(R.id.the_regex);
@@ -231,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         hideMessageWindow();
 
         // Buttons and Actions
-        final String switcherTrue="Ganzer Text, markiere Treffer";
+        final String switcherTrue="Ganzer Text";
         final String switcherFalse="Nur die Ergebnisse";
         if (textViewSwitcher.isChecked()) textViewSwitcher.setText(switcherTrue);
         else textViewSwitcher.setText(switcherFalse);
@@ -294,7 +320,6 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                 stopAllTasks();
                 Intent in = new Intent(v.getContext(), RegexPicker.class);
                 startActivityForResult(in,GET_REGEX);
-                regexWasSaved=true;
             }
         });
 
@@ -304,9 +329,35 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             public void onClick(View v) {
                 stopAllTasks();
                 Intent in = new Intent(v.getContext(), InsertRegexInDB.class);
-                in.putExtra("regexString",theRegex.getText().toString());
-                regexWasSaved=true;
-                startActivity(in);
+
+                // If regex is empty, do nothing!
+                if (!theRegex.getText().toString().isEmpty()) {
+
+                    // If current regex string was not changed (just taken from DB) then do nothing. Else:
+                    // If current entry was taken from DB, then ask the user if he wishes to update it.
+                    // If not, create a new entry.
+                    if (!regexWasSaved) {
+                        if (regexInsertFromDB) {
+                            FragmentManager fm = getSupportFragmentManager();
+                            FragmentCustomDialogYesNo fragmentDeleteRegex =
+                                    FragmentCustomDialogYesNo.newInstance(UPDATE_REGEX,
+                                            FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,NOT_REQUIERED,
+                                            null, getResources().getString(R.string.new_entry_or_update),
+                                            getResources().getString(R.string.update_button),
+                                            getResources().getString(R.string.new_entry_button));
+                            fragmentDeleteRegex.show(fm, "fragment_dialog");
+                        } else {
+                            in.putExtra("myTaskIs", InsertRegexInDB.CREATE_NEW_ENTRY);
+                            in.putExtra("regexString", theRegex.getText().toString());
+                            regexWasSaved = true;
+                            startActivity(in);
+                        }
+                    }else{
+                        Toast.makeText(getApplicationContext(), "Nichts geändert, nichts zum speichern...", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Keine Regex, nichts zum speichern da.....", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -314,12 +365,11 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         delRegex.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if(!regexWasSaved && !theRegex.getText().toString().isEmpty()) {
                     FragmentManager fm = getSupportFragmentManager();
                     FragmentCustomDialogYesNo fragmentDeleteRegex =
                             FragmentCustomDialogYesNo.newInstance(DELETE_REGEX,
-                                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,
+                                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,NOT_REQUIERED,
                                     null, getResources().getString(R.string.delete_regex_dialog),
                                     getResources().getString(R.string.yes_button),
                                     getResources().getString(R.string.no_button));
@@ -335,15 +385,17 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             @Override
             public void onClick(View v) {
 
+                Log.v(tag,"text was saved:"+textWasSaved);
+                Log.v(tag,"text is empty:"+testText.getText().toString().isEmpty());
                 if(!textWasSaved && !testText.getText().toString().isEmpty()) {
                     FragmentManager fm = getSupportFragmentManager();
                     FragmentCustomDialogYesNo fragmentDeleteRegex =
                             FragmentCustomDialogYesNo.newInstance(DELETE_TEXT,
-                                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,
+                                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,NOT_REQUIERED,
                                     null, getResources().getString(R.string.delete_text_dialog),
                                     getResources().getString(R.string.yes_button),
                                     getResources().getString(R.string.no_button));
-                    fragmentDeleteRegex.show(fm, "fragment_dialog");
+                    fragmentDeleteRegex.show(fm, "fragment_custom_dialog_yes_no");
                 } else{
                     deleteText();
                 }
@@ -444,12 +496,56 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             public void afterTextChanged(Editable editable) {
             }
         });
-
     }
 
     /**
      * Callbacks
      */
+
+    /**
+     * With startActivityForResult started activity's,
+     * will return to this callback method
+     *
+     */
+
+    @Override
+    protected void onActivityResult(int reqCode,int resCode,Intent data)
+    {
+        // Load text
+        if (reqCode==LOAD_TEXT){
+            if (data!=null && data.hasExtra("path")) {
+
+                final String path=data.getExtras().getString("path");
+
+                stopAllTasks();
+                justResult.setText(" ");
+
+                loader=new LoadText(testText,messageText,searchProgress,path);
+                loader.execute();
+
+                textWasSaved=true;
+            }
+        }
+
+        // Save text
+        if(reqCode==SAVE_TEXT){
+            textWasSaved=true;
+        }
+
+        // Get regex from database
+        if (resCode==RESULT_OK && reqCode==GET_REGEX){
+
+            if (data.hasExtra("theRegex")) {
+
+                final String regex = data.getExtras().getString("theRegex");
+                key1=data.getExtras().getInt("key1");
+                theRegex.setText(regex);
+                hideMessageWindow();
+                regexWasSaved=true;
+                regexInsertFromDB=true;
+            }
+        }
+    }
 
     /**
      * Get input from yes/ no fragment
@@ -458,7 +554,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
      */
 
     @Override
-    public void getDialogInput(int reqCode,String text,String buttonPressed)
+    public void getDialogInput(int reqCode,int data,String text,String buttonPressed)
     {
         switch (reqCode){
 
@@ -474,16 +570,31 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                 if(buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)){
                     deleteText();
                 }
+                break;
+
+            // Insert or update regex entry in database
+            case UPDATE_REGEX:
+                Intent in = new Intent(this, InsertRegexInDB.class);
+                if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)) {
+                    in.putExtra("myTaskIs", InsertRegexInDB.UPDATE_ENTRY);
+                    in.putExtra("key1", key1);
+                    in.putExtra("regexString", theRegex.getText().toString());
+                } else {
+                    in.putExtra("myTaskIs", InsertRegexInDB.CREATE_NEW_ENTRY);
+                    in.putExtra("regexString", theRegex.getText().toString());
+                }
+                startActivity(in);
+                break;
         }
     }
 
     /**
-     * Saves instance state
+     * @remSaves instance state@@
      *
-     * Is called when the user leaves this activity or the screen orientation
-     * is changed. In other words:
+     * @rem:Is called when the user leaves this activity or the screen orientation@@
+     * @rem:is changed. In other words:@@
      *
-     * ONLY IF THE ACTIVITY IS DESTROYED BY THE SYSTEM!
+     * @rem:* ONLY IF THE ACTIVITY IS DESTROYED BY THE SYSTEM!@@
      *
      * Here the contents of all 'editText' fields are saved to out state
      *
@@ -498,6 +609,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         outState.putString("testText",testText.getText().toString());
         outState.putBoolean("regexWasSaved",regexWasSaved);
         outState.putBoolean("textWasSaved",textWasSaved);
+        outState.putBoolean("regexInsertFromDB",regexInsertFromDB);
         Log.v(tag,"State saved.....");
     }
 
@@ -513,6 +625,22 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    /**
+     * If Back button was pressed
+     *
+     * @rem: Override "Back Button Pressed". Shows how to check if this button was pressed@@
+     * @rem: Here it is checked to prevent the user from accidendily leave the app@@
+     */
+
+    @Override
+    public void onBackPressed()
+    {
+        timesBackPressed++;
+        if(timesBackPressed>1) finish();
+        else Toast.makeText(getApplicationContext(),getResources().getString(R.string.leave_warning),Toast.LENGTH_LONG).show();
+
     }
 
     /**
@@ -543,52 +671,17 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                     this.startActivityForResult(i,LOAD_TEXT);
                     break;
 
-                // Save ?
+                // Save text?
                 case R.id.save:
                     Intent saveFile=new Intent (this,SaveDialog.class);
                     saveFile.putExtra("testText",testText.getText().toString());
                     saveFile.putExtra("justTheResult",justResult.getText().toString());
                     saveFile.putExtra("theRegex",theRegex.getText().toString());
                     saveFile.putExtra("path",workingDir);
-                    this.startActivity(saveFile);
+                    this.startActivityForResult(saveFile,SAVE_TEXT);
                     break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * With startActivityForResult started activity's,
-     * will return to this callback method
-     *
-     */
-
-    @Override
-    protected void onActivityResult(int reqCode,int resCode,Intent data)
-    {
-        // Load text
-        if (resCode==RESULT_OK && reqCode==LOAD_TEXT){
-            if (data.hasExtra("path")) {
-
-                final String path=data.getExtras().getString("path");
-
-                stopAllTasks();
-                justResult.setText(" ");
-
-                loader=new LoadText(testText,messageText,searchProgress,path);
-                loader.execute();
-
-                textWasSaved=true;
-            }
-        }
-        if (resCode==RESULT_OK && reqCode==GET_REGEX){
-
-            if (data.hasExtra("theRegex")) {
-
-                final String regex = data.getExtras().getString("theRegex");
-                theRegex.setText(regex);
-                hideMessageWindow();
-            }
-        }
     }
 
     /**
@@ -600,6 +693,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         stopAllTasks();
         theRegex.setText("");
         messageText.setText("");
+        regexInsertFromDB=false;
         hideMessageWindow();
         removeHighlightFromTestText();
     }
@@ -611,8 +705,9 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     private void deleteText(){
 
         stopAllTasks();
-        testText.setText(" ");
-        justResult.setText(" ");
+        testText.setText("");
+        justResult.setText("");
+        textWasSaved=true;
     }
 
     /**

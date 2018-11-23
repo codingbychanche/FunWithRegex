@@ -103,7 +103,6 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
             Log.v(tag,"Fehler "+ e);
         }
 
-
         return "Done";
     }
 

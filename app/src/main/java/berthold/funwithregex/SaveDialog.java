@@ -1,16 +1,23 @@
 package berthold.funwithregex;
-/**
- * Save Dialog
+
+/*
+ * SaveDialog.java
  *
- * Input filename to save, pick dir to save at.
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 9/3/18 8:30 AM
  */
 
-import android.content.DialogInterface;
+/**
+ * Save Dialog
+ */
 
 import android.content.Intent;
-import android.media.Image;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
+import android.net.Uri;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,17 +28,13 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
 
 
-public class SaveDialog extends AppCompatActivity {
+public class SaveDialog extends AppCompatActivity implements FragmentCustomDialogYesNo.getDataFromFragment{
 
     // UI
-    private EditText fileName;
     private ImageButton saveToFileLocally;
+    private ImageButton sendByMail;
     private CheckBox attachRegex;
     private CheckBox attachResultText;
     private TextView sampleText;
@@ -44,16 +47,19 @@ public class SaveDialog extends AppCompatActivity {
 
     private String savePath;
 
-    private saveText saver;
+    private SaveText saver;
 
     // Debug
     private String tag;
 
     // Request codes
     private static final int SAVE_FILE=1;
+    private static final int CONFIRM_TEXT_SAVE_LOC=2;
 
-    // File Sys
-    private String workingDir="/";
+    private boolean SHOW_CONFIRM_SAVE_AT=false;
+    private boolean SHOW_CONFIRM_OVERWRITE=false;
+
+    private static final int NOT_REQUIERED=-1;
 
     /**
      * On create
@@ -75,33 +81,40 @@ public class SaveDialog extends AppCompatActivity {
         testText=extras.getString("testText");
         justTheResult=extras.getString("justTheResult");
 
-        if(extras.get("path")!=null) workingDir=extras.get("path").toString();
-
         // UI
-        //fileName=(EditText) findViewById(R.id.file_name);
         saveToFileLocally=(ImageButton)findViewById(R.id.save_text_localy);
+        sendByMail=(ImageButton)findViewById(R.id.send_by_mail);
         attachRegex=(CheckBox)findViewById(R.id.attach_regex);
         attachResultText=(CheckBox)findViewById(R.id.attach_result);
         sampleText=(TextView)findViewById(R.id.sample_of_saved_text);
         progressBar=(ProgressBar)findViewById(R.id.save_progress);
 
-
         // Init some UI-components
         initUI();
 
         // Save file, opens the 'fileChooser'
-       saveToFileLocally.setOnClickListener(new View.OnClickListener() {
+        saveToFileLocally.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                if (!fileName.getText().toString().isEmpty()) {
-                    Intent i = new Intent(SaveDialog.this, FileChooserDeluxe.class);
-                    i.putExtra(FileChooserDeluxe.MY_TASK_FOR_TODAY_IS, FileChooserDeluxe.SAVE_FILE);
-                    i.putExtra("path",workingDir);
-                    startActivityForResult(i, SAVE_FILE);
-                }else{
-                    Toast.makeText(getApplicationContext(),"Bitte einen Dateinamen eingeben...", Toast.LENGTH_LONG).show();
-                }
+                Intent i = new Intent(v.getContext(), FileChooserDeluxe.class);
+                i.putExtra(FileChooserDeluxe.MY_TASK_FOR_TODAY_IS,FileChooserDeluxe.SAVE_FILE);
+                i.putExtra("path",MainActivity.workingDir);
+                startActivityForResult(i,SAVE_FILE);
+            }
+        });
+
+        // Send text by mail
+        sendByMail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                emailIntent.setData(Uri.parse("mailto:"));
+                emailIntent.setType("text/plain");
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "FunWithRegex: Take this :-)");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, sampleText.getText());
+                startActivity(Intent.createChooser(emailIntent, "Send email..."));
             }
         });
 
@@ -132,53 +145,97 @@ public class SaveDialog extends AppCompatActivity {
     @Override
     protected void onActivityResult(int reqCode,int resCode,Intent data)
     {
-
         if (resCode==RESULT_OK && reqCode==SAVE_FILE ){
             if (data.hasExtra("path")) {
 
                 savePath=data.getExtras().getString("path");
-                String returnStatus=data.getExtras().getString(FileChooserDeluxe.RETURN_STATUS);
-                Log.v(tag+" Return Status is:"+returnStatus+"---","Saving.."+savePath);
 
-                // Confirm Dialog
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == DialogInterface.BUTTON_POSITIVE) dialogReturn(true);
-                        if (which == DialogInterface.BUTTON_NEGATIVE) dialogReturn(false);
+                // When saving a file:
+                // Check if just the folder was picked, in that case you have to take care
+                // that a filename will be assigned or:
+                // if a folder and an existing file was selected, in that case you may want to
+                // check if the user wants the selected file to be overwritten...
+                String returnStatus = data.getExtras().getString(FileChooserDeluxe.RETURN_STATUS);
+
+                if (returnStatus!=null) {
+
+                    // File was picked, ask user if he want's to overwrite it
+                    if (returnStatus.equals(FileChooserDeluxe.FOLDER_AND_FILE_PICKED)) {
+                     Log.v(tag,": Folder and file was picked.... ");
+                        SHOW_CONFIRM_OVERWRITE=true;
+                        SHOW_CONFIRM_SAVE_AT=false;
                     }
-                };
 
-                // Build Dialog
-                final AlertDialog.Builder chooseYesNo = new AlertDialog.Builder(this);
-
-                if (returnStatus.equals("folderAndFilePicked")) {
-                    chooseYesNo.setMessage("Möchten Sie die Datei:"+ savePath+ "wirklich ersetzen?").setPositiveButton(R.string.yes, dialogClickListener).
-                            setNegativeButton(R.string.no, dialogClickListener);
+                    // Just the folder, ask user for filename
+                    if (returnStatus.equals(FileChooserDeluxe.JUST_THE_FOLDER_PICKED)) {
+                        Log.v(tag,": Just folder picked....");
+                        SHOW_CONFIRM_SAVE_AT=true;
+                        SHOW_CONFIRM_OVERWRITE=false;
+                    }
                 }
 
-                if (returnStatus.equals("justFolder")){
-                    chooseYesNo.setMessage("Datei:"+fileName.getText()+" im Ordner "+savePath+" speichern?").setPositiveButton(R.string.yes, dialogClickListener).
-                            setNegativeButton(R.string.no, dialogClickListener);
-                }
-                chooseYesNo.show();
+                //saver = new SaveText(sampleText.getText().toString(),getApplicationContext(),progressBar, savePath+"/" + "Text.txt");
+                //saver.execute();
             }
         }
     }
 
     /**
-     * Callback for yesNoDialog.
-     *
-     * @param confirmed
+     * On Resume
      */
 
-    public void dialogReturn(boolean confirmed){
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
 
-        if (confirmed) {
+        if (SHOW_CONFIRM_SAVE_AT){
+            showConfirmDialog(CONFIRM_TEXT_SAVE_LOC,
+                    FragmentCustomDialogYesNo.SHOW_WITH_EDIT_TEXT,
+                    getResources().getString(R.string.confirm_dialog_save_at),
+                    getResources().getString(R.string.confirm_save_at),
+                    getResources().getString(R.string.cancel_save));
+        }
 
-            // Save file
-            saver = new saveText(sampleText.getText().toString(),getApplicationContext(),progressBar, savePath + "/" + fileName.getText().toString());
-            saver.execute();
+        if (SHOW_CONFIRM_OVERWRITE){
+            showConfirmDialog(CONFIRM_TEXT_SAVE_LOC,
+                    FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,
+                    (getResources().getString(R.string.confirm_dialog_overwrite)+" \n"+savePath),
+                    getResources().getString(R.string.confirm_save_at),
+                    getResources().getString(R.string.cancel_save));
+        }
+    }
+
+    /**
+     * Callback for yesNoDialog
+     *
+     * @see FragmentCustomDialogYesNo
+     *
+     */
+
+    @Override
+    public void getDialogInput(int reqCode,int data,String filename,String buttonPressed)
+    {
+        // Callback from confirm dialog
+        // Existing file will be overwritten or a new file will be created
+        // depending on the users choice in previously shown confirm dialog.
+        if(reqCode==CONFIRM_TEXT_SAVE_LOC){
+            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)){
+                Log.v(tag," Button:"+buttonPressed);
+
+                SaveText saveText=null;
+                if (SHOW_CONFIRM_OVERWRITE) // Folder and file was picked, so, overwrite file....
+                    saveText=new SaveText(sampleText.getText().toString(),getApplicationContext(),null,savePath);
+                if (SHOW_CONFIRM_SAVE_AT) // Just the folder picked, so, add flename to path....
+                    saveText=new SaveText(sampleText.getText().toString(),getApplicationContext(),null,savePath+"/"+filename);
+
+                // Save!
+                saveText.execute();
+            }
+
+            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_CANCEL_PRESSED)){
+                Log.v(tag," Button:"+buttonPressed);
+            }
         }
     }
 
@@ -206,7 +263,20 @@ public class SaveDialog extends AppCompatActivity {
             sampleText.append("\n\n");
             sampleText.append(justTheResult);
         }
+    }
 
+    /*
+     * Show confirm at dialog
+     *
+     * Asks the user to confirm the location to save his file to
+     */
+
+    private void showConfirmDialog(int reqCode,int kindOfDialog,String dialogText,String confirmButton,String cancelButton)
+    {
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentCustomDialogYesNo fragmentDeleteRegex =
+                FragmentCustomDialogYesNo.newInstance(reqCode,NOT_REQUIERED,kindOfDialog,null,dialogText,confirmButton,cancelButton);
+        fragmentDeleteRegex.show(fm, "fragment_dialog");
     }
 
 }

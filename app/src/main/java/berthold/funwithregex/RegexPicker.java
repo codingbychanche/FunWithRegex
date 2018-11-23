@@ -1,6 +1,17 @@
 package berthold.funwithregex;
 
-/**
+/*
+ * RegexPicker.java
+ *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 9/24/18 8:27 PM
+ */
+
+/*
  * Regex Picker
  *
  * Shows a list of regex'es and lets the user pick one of them
@@ -8,40 +19,43 @@ package berthold.funwithregex;
  *
  */
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class RegexPicker extends AppCompatActivity {
+public class RegexPicker extends AppCompatActivity implements FragmentCustomDialogYesNo.getDataFromFragment {
 
     // Toolbar
     private Toolbar toolbar;
 
     // UI
     private TextView showSorting;
+    private SearchView searchView;
+
     // Debug
     private String tag;
 
     // Custom List adapter for our list of regexe's
-    private AdapterRegexList regexListAdapter;
+    private RegexListAdapter regexListAdapter;
 
     // Async task, filling the list of regexe's...
     private RegexListFiller filler;
+
+    // Shared preferences
+    SharedPreferences sharedPreferences;
 
     // Sorting
     // These strings must contain the aprobiate field in the database. They are
@@ -63,6 +77,7 @@ public class RegexPicker extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         // UI
         showSorting=(TextView)findViewById(R.id.info_text);
 
@@ -71,7 +86,7 @@ public class RegexPicker extends AppCompatActivity {
 
         // Create custom list adapter
         ArrayList<ListEntryRegexList> entry = new ArrayList<>();
-        regexListAdapter = new AdapterRegexList(this, entry);      // Custom list adapter
+        regexListAdapter = new RegexListAdapter(this, entry);      // Custom list adapter
         final ListView listView = (ListView) findViewById(R.id.regex_list);
         listView.setAdapter(regexListAdapter);
 
@@ -83,9 +98,42 @@ public class RegexPicker extends AppCompatActivity {
         if (savedInstanceState != null) searchQuery=savedInstanceState.getString("searchTerm");
 
         orderBy="date";
-        updateRegexList(regexListAdapter,orderBy,sortingOrder);
+
+        // @rem:Get instance state@@
+        // @rem:Should be done in 'OnCreate()'
+        if (savedInstanceState!=null) {
+            sortingOrder = savedInstanceState.getString("sortingOrder");
+            orderBy=savedInstanceState.getString("orderBy");
+            searchQuery = savedInstanceState.getString("searchTerm");
+        }
     }
 
+    /**
+     * On Resume
+     *
+     */
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+
+        // @rem:Get shared preferences@@
+        // @rem:Should be done in 'onResume'@@
+        // @rem:Reason, this way this is executed when the activity was left and restarted@@
+        // @rem:In 'onCreate()' it would only executed after the activity was destroyed by the@@
+        // @rem:system and then restarted@@
+        // @rem:Semms to be best practice to do it...@@
+        sharedPreferences=getPreferences(MODE_PRIVATE);
+        searchQuery=sharedPreferences.getString("searchQuerry",searchQuery);
+        sortingOrder=sharedPreferences.getString("sortingOrder",sortingOrder);
+        orderBy=sharedPreferences.getString("orderBy",orderBy);
+
+        // Update list
+        updateRegexList(regexListAdapter,orderBy,sortingOrder);
+
+    }
     /**
      * The menu, located in action bar...
      *
@@ -99,8 +147,10 @@ public class RegexPicker extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_regex_picker, menu);
 
         // Get Search field
-        SearchView searchView=(SearchView) menu.findItem(R.id.action_search).getActionView();
-
+        // @rem:Get search view located at toolbar@@
+        // @rem:Shows how to handle inputs and update a list accordingly@@
+        searchView=(SearchView) menu.findItem(R.id.action_search).getActionView();
+        
         SearchView.OnQueryTextListener querryTextListener=new SearchView.OnQueryTextListener(){
             public boolean onQueryTextChange(String sq){
                 Log.v(tag+"-----Query changed",sq);
@@ -117,7 +167,6 @@ public class RegexPicker extends AppCompatActivity {
             }
         };
         searchView.setOnQueryTextListener(querryTextListener);
-
         return true;
     }
 
@@ -151,9 +200,32 @@ public class RegexPicker extends AppCompatActivity {
             orderBy="rating";
             updateRegexList(regexListAdapter,orderBy,sortingOrder);
             break;
+
+            case R.id.export_csv:
+                Intent in = new Intent(this,ActivityExportDBAsCsv.class);
+                startActivity(in);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * If Back button was pressed
+     *
+     * Override "Back Button Pressed". Shows how to check if this button was pressed
+     *
+     * If user leaves this activitys, all settings (search querry, sorting order....)
+     * will be saved to Android's shared preferences. They will be restored when
+     * this activity is restarted.
+     */
+
+    @Override
+    public void onBackPressed()
+    {
+        saveSettings();
+        finish();
+    }
+
 
     /**
      * Saves instance state
@@ -169,6 +241,22 @@ public class RegexPicker extends AppCompatActivity {
     protected void onSaveInstanceState (Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("searchTerm",searchQuery);
+        outState.putString("sortingOrder",sortingOrder);
+        outState.putString("orderBy",orderBy);
+    }
+
+    /**
+     * Save current settings in shared preferences
+     */
+
+    public void saveSettings()
+    {
+        sharedPreferences=getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        editor.putString("searchQuerry",searchQuery);
+        editor.putString("sortingOrder",sortingOrder);
+        editor.putString("orderBy",orderBy);
+        editor.commit();
     }
 
     /**
@@ -176,7 +264,7 @@ public class RegexPicker extends AppCompatActivity {
      *
      */
 
-    private void updateRegexList(AdapterRegexList regexListAdapter,String orderBy,String sortingOrder){
+    private void updateRegexList(RegexListAdapter regexListAdapter, String orderBy, String sortingOrder){
         Log.v(tag," Updating list");
         if (filler!=null) filler.cancel(true);
         filler=new RegexListFiller(regexListAdapter,getApplicationContext(),orderBy,searchQuery,sortingOrder);
@@ -208,5 +296,29 @@ public class RegexPicker extends AppCompatActivity {
         showSorting.setText(infoText.toString());
 
         return;
+    }
+
+    /**
+     * Get input from yes/ no fragment
+     *
+     * @see FragmentCustomDialogYesNo
+     */
+
+    @Override
+    public void getDialogInput(int reqCode,int key1,String text,String buttonPressed)
+    {
+        Log.v("RegexPicker button:",buttonPressed+" KEY1:"+key1);
+
+        switch (reqCode) {
+
+            case RegexListAdapter.DELETE_REGEX:
+                if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)) {
+                    try {
+                        MainActivity.conn.createStatement().executeUpdate("delete from regex where key1=" + key1);
+                        updateRegexList(regexListAdapter,orderBy,sortingOrder);
+                    } catch (SQLException e) {}
+                }
+            break;
+        }
     }
 }

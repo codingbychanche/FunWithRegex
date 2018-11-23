@@ -11,16 +11,13 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 
-public class saveText extends AsyncTask<String,StringBuffer,String> {
+public class SaveText extends AsyncTask<String,StringBuffer,String> {
 
     private String tag;
 
@@ -37,7 +34,7 @@ public class saveText extends AsyncTask<String,StringBuffer,String> {
      * Creates a new filler object
      */
 
-    saveText(String text, Context c,ProgressBar p, String path){
+    SaveText(String text, Context c, ProgressBar p, String path){
         this.text=text;
         this.c=c;
         this.p=p;
@@ -45,12 +42,13 @@ public class saveText extends AsyncTask<String,StringBuffer,String> {
     }
 
     /**
-     * Load text file
+     * Save text file
      */
 
     @Override
-    protected void onPreExecute(){
-        p.setVisibility(View.VISIBLE);
+    protected void onPreExecute()
+    {
+        if (p!=null) p.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -61,31 +59,35 @@ public class saveText extends AsyncTask<String,StringBuffer,String> {
     @Override
     protected String doInBackground(String ... params){
 
-        // Debug
-        tag=saveText.class.getSimpleName();
+        // @rem:Debug@@
+        // @rem:This is an example on how to view debug- info with class name in monitor@@
+        tag=SaveText.class.getSimpleName();
 
         Log.v (tag,text);
 
         finalMessage="Gespeichert...."; // Will be overwritte with error message if something gone wrong....
 
-        try {
-            FileOutputStream fo=c.openFileOutput(path,Context.MODE_PRIVATE);
-            fo.write(text.getBytes());
-            fo.close();
+        if (!isCancelled()) {
+            try {
+                //FileOutputStream fo=c.openFileOutput(path,Context.MODE_PRIVATE);
+                FileOutputStream fo = new FileOutputStream(path);
+                //BufferedWriter fo=new BufferedWriter(new FileWriter(path));
+                fo.write(text.getBytes());
+                fo.close();
 
-            Log.v(tag," Saving to:"+path);
+                Log.v(tag, " Saving to:" + path);
 
-            // Wait a few seconds
-            // If I didn't the list was not build in the right order.....
-            try{
-                Thread.sleep(150);
-            }catch (InterruptedException e){}
+                // Wait a few seconds
+                // If I didn't the list was not build in the right order.....
+                try {
+                    Thread.sleep(550);
+                } catch (InterruptedException e) {}
 
-        }catch (Exception e){
-            Log.v(tag,"Fehler "+ e);
-            finalMessage="Fehler, konnte nach "+path+" nicht schreiben. Grund:"+e.toString();
+            } catch (Exception e) {
+                Log.v(tag, "Fehler " + e);
+                finalMessage = "Fehler, konnte nach " + path + " nicht schreiben. Grund:" + e.toString();
+            }
         }
-
         return "Done";
     }
 
@@ -112,8 +114,7 @@ public class saveText extends AsyncTask<String,StringBuffer,String> {
 
     @Override
     protected void onPostExecute (String result){
-        p.setVisibility(View.GONE);
+        if (p!=null) p.setVisibility(View.GONE);
         Toast.makeText(c,finalMessage, Toast.LENGTH_LONG).show();
-
     }
 }

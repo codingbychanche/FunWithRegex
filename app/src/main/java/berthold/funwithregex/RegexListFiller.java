@@ -1,25 +1,27 @@
 package berthold.funwithregex;
 
-/**
- * List Filler
+/*
+ * RegexListFiller.java
  *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 10/14/18 8:36 PM
+ */
+
+/*
  * This fills the array list containing all the data...
- *
- *  @author  Berthold Fritz 2017
  */
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.RelativeSizeSpan;
-import android.text.style.SubscriptSpan;
-import android.text.style.UnderlineSpan;
 import android.util.Log;
 
 import java.sql.PreparedStatement;
@@ -32,7 +34,7 @@ public class RegexListFiller extends AsyncTask<String,ListEntryRegexList,String>
 
     private Context c;
 
-    private AdapterRegexList listAdapter;
+    private RegexListAdapter listAdapter;
 
     private String orderBy;
     private String searchQuery;
@@ -46,7 +48,7 @@ public class RegexListFiller extends AsyncTask<String,ListEntryRegexList,String>
      * Creates a new filler object
      */
 
-    RegexListFiller(AdapterRegexList listAdapter, Context c,String orderBy,String searchQuery,String sortingOrder){
+    RegexListFiller(RegexListAdapter listAdapter, Context c, String orderBy, String searchQuery, String sortingOrder){
         this.listAdapter=listAdapter;
         this.c=c;
         this.orderBy=orderBy;
@@ -79,7 +81,7 @@ public class RegexListFiller extends AsyncTask<String,ListEntryRegexList,String>
         try {
             PreparedStatement selectPreparedStatement = null;
             Log.v(tag+" Sorting:",sortingOrder+" Search:"+searchQuery);
-            selectPreparedStatement = MainActivity.conn.prepareStatement("select key1,regexstring,description,rating from regex where description like '%" + searchQuery + "%' order by "+ orderBy +" "+sortingOrder);
+            selectPreparedStatement = MainActivity.conn.prepareStatement("select key1,regexstring,description,date,rating from regex where description like '%" + searchQuery + "%' order by "+ orderBy +" "+sortingOrder);
             ResultSet rs = selectPreparedStatement.executeQuery();
 
             while (rs.next()){
@@ -99,11 +101,16 @@ public class RegexListFiller extends AsyncTask<String,ListEntryRegexList,String>
                 int key1 = 0;
                 String regexString = "-";
                 String comment = "-";
+                String date="-";
                 int rating = 0;
                 if (cg >= 1) key1 = rs.getInt(1);
                 if (cg >= 2) regexString = rs.getString(2);
                 if (cg >= 3) comment = rs.getString(3);
-                if (cg >= 4) rating = rs.getInt(4);
+
+                if (cg >= 4) date=rs.getString(4);
+                String niceDate=FormatTimeStamp.german(date,FormatTimeStamp.WITH_TIME);
+
+                if (cg >= 5) rating = rs.getInt(5);
 
                 // If search querry was passed, mark matching part of comment....
                 Spannable markedCommend=new SpannableString(comment);
@@ -113,7 +120,7 @@ public class RegexListFiller extends AsyncTask<String,ListEntryRegexList,String>
                     markedCommend.setSpan(new RelativeSizeSpan(2),startIndex,startIndex+searchQuery.length(),0);
                 }
                 // Create list entry
-                ListEntryRegexList e = new ListEntryRegexList(key1, regexString, markedCommend, "-", rating);
+                ListEntryRegexList e = new ListEntryRegexList(key1, regexString, markedCommend, niceDate, rating);
                 publishProgress(e);
             }
             if (cg<1) {

@@ -44,7 +44,7 @@ public class FileChooserDeluxe extends AppCompatActivity {
 
     // Filesystem
     private File currentPath;                                       // The current path
-    private String root="/";                                        // Initial path, root if not specified via extras
+    private String root;                                            // Initial path, root if not specified via extras
     private File [] fileObjects;                                    // Contains the current folder's files as file- objects in the same order as 'directory'
 
     // List view
@@ -256,7 +256,7 @@ public class FileChooserDeluxe extends AppCompatActivity {
         // If up button was pressed, move to parent dir or leave activity if
         // we are already at "/"
         if (id == R.id.goup) {
-            if (currentPath.toString().equals("/")){
+            if (currentPath.toString().equals(root)){
                 // Cancel async task, if picture thumbnails for the
                 // current dir are created....
                 finishIt();
@@ -288,7 +288,7 @@ public class FileChooserDeluxe extends AppCompatActivity {
             // Clear dir array
             a.clear();
             progress=(ProgressBar)findViewById(R.id.pbar);
-            task=new FileListFillerV5(a, fileObjects, 0,fileObjects.length-1,getApplicationContext(),progress);
+            task=new FileListFillerV5(a, fileObjects, 0,fileObjects.length,getApplicationContext(),progress);
             task.execute();
 
             return;

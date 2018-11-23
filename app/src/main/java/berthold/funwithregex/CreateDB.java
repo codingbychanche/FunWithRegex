@@ -3,7 +3,7 @@ package berthold.funwithregex;
 /**
  * Create.
  * 
- * This creates a new, empty, database if no databse of the same
+ * This creates a new, empty, database if no database of the same
  * name already exists.
  * 
  * @author Berthold Fritz 2016

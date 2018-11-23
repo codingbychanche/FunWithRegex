@@ -1,10 +1,19 @@
-/**
- *  Data model for each row in our list
+package berthold.funwithregex;
+
+/*
+ * ListEntryRegexList.java
  *
- *  @author  Berthold Fritz 2017
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 3/23/18 9:24 PM
  */
 
-package berthold.funwithregex;
+/**
+ *  Data model for each row in our list
+ */
 
 import android.text.Spannable;
 import android.widget.RatingBar;
