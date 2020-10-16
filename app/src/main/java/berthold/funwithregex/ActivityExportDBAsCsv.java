@@ -13,9 +13,12 @@ package berthold.funwithregex;
 
 /**
  * Exports the regex db as a csv- table
+ *
+ * @todo: Saving is done on UI- Thread. Exporting large files could block the App......
  */
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,7 +28,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,12 +39,14 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
 
     // UI
     ImageButton save;
+    ImageButton sendByMail;
     EditText    csvSepparator;
     ProgressBar pBar;
 
     // Req codes
     private final static int SAVE_CSV=1;
     private final static int CONFIRM_CSV_SAVE_LOC=2;
+    private final static int CONFIRM_CSV_OVERWRITE=3;
 
     private boolean SHOW_CONFIRM_SAVE_AT=false;
     private boolean SHOW_CONFIRM_OVERWRITE=false;
@@ -64,6 +71,7 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
 
         // UI
         save=(ImageButton)findViewById(R.id.save_csv_localy);
+        sendByMail=(ImageButton)findViewById(R.id.export_csv_by_mail);
         csvSepparator=(EditText)findViewById(R.id.csv_separator);
         pBar=(ProgressBar)findViewById(R.id.csv_pbar);
 
@@ -75,6 +83,20 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
                 i.putExtra(FileChooserDeluxe.MY_TASK_FOR_TODAY_IS,FileChooserDeluxe.SAVE_FILE);
                 i.putExtra("path",MainActivity.workingDir);
                 startActivityForResult(i,SAVE_CSV);
+            }
+        });
+
+        // Send text by mail
+        sendByMail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String csvTable=tableToCsv(csvSepparator.getText().toString());
+                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                emailIntent.setData(Uri.parse("mailto:"));
+                emailIntent.setType("text/plain");
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "FunWithRegex: Take this :-)");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, csvTable);
+                startActivity(Intent.createChooser(emailIntent, "Send email..."));
             }
         });
     }
@@ -132,14 +154,9 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
         super.onResume();
 
         // @rem:Bug api level >11. When starting fragment before 'onResume' was called:@@
-        // @rem: java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState@@
+        // @rem:java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState@@
         // @rem:This is a workaround for this bug!@@
-        //
-        // This is a workaround for an bug which appears in api levels > 11
-        // toDo Insert link for see: ... stack overflow..
-        // Basically the bugs result is that you can't start an fragment before 'on Resume' was called.
-        // If you do so: java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
-
+        // @rem:toDo Insert link for see: ... stack overflow..@@
         if (SHOW_CONFIRM_SAVE_AT){
            showConfirmDialog(CONFIRM_CSV_SAVE_LOC,
                    FragmentCustomDialogYesNo.SHOW_WITH_EDIT_TEXT,
@@ -149,7 +166,7 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
         }
 
         if (SHOW_CONFIRM_OVERWRITE){
-            showConfirmDialog(CONFIRM_CSV_SAVE_LOC,
+            showConfirmDialog(CONFIRM_CSV_OVERWRITE,
                     FragmentCustomDialogYesNo.SHOW_AS_YES_NO_DIALOG,
                     (getResources().getString(R.string.confirm_dialog_overwrite)+" \n"+path),
                     getResources().getString(R.string.confirm_save_at),
@@ -179,18 +196,33 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
      */
 
     @Override
-    public void getDialogInput(int reqCode,int data,String filename,String buttonPressed)
-    {
-       System.out.println(tableToCsv(csvSepparator.getText().toString()));
-
+    public void getDialogInput(int reqCode,int data,String filename,String buttonPressed) {
         // Callback from confirm dialog
         // Existing '*.csv' file will be overwritten or a new file will be created
         // depending on the users choice in previously shown confirm dialog.
-        if(reqCode==CONFIRM_CSV_SAVE_LOC){
-           if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)){
-              if (SHOW_CONFIRM_OVERWRITE) saveCsv(path);
-              else saveCsv(path+"/"+filename);
-           }
+        File f = new File(path + "/" + filename);
+
+        if (reqCode == CONFIRM_CSV_SAVE_LOC) {
+            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)) {
+
+                // If filename does not exist, save file....
+                if (!f.exists())
+                    saveCsv(path + "/" + filename);
+                else {
+                    // ... If filename exists, append '_NEW' to filename. Do not overwrite
+                    // existing file.
+                    String newFilename = filename + "_NEW";
+                    saveCsv(path + "/" + newFilename);
+                    Toast.makeText(getApplicationContext(), "Die Datei " + filename + " gibt es schon. Neue Datei unter " + newFilename + " abgelegt.", Toast.LENGTH_LONG).show();
+                }
+
+            } else
+                // Cancel button pressed, do nothing.....
+                Toast.makeText(getApplicationContext(), "Nichts gespeichert....", Toast.LENGTH_LONG).show();
+        }
+        // If file was picked, overwrite
+        if (reqCode == CONFIRM_CSV_OVERWRITE) {
+            saveCsv(path);
         }
     }
 
@@ -219,13 +251,13 @@ public class ActivityExportDBAsCsv extends AppCompatActivity implements Fragment
             selectPreparedStatement = MainActivity.conn.prepareStatement("select date,regexstring,description,rating from regex");
             ResultSet rs = selectPreparedStatement.executeQuery();
 
-            do{
+            while(rs.next()){
                 String dateTime=FormatTimeStamp.german (rs.getString(1).toString(),FormatTimeStamp.WITH_TIME);
                 csvTable.append (dateTime+sepparator);
                 csvTable.append (rs.getString(2)+sepparator);
                 csvTable.append (rs.getString(3)+sepparator);
                 csvTable.append (rs.getInt(4)+"\n");
-            }while (rs.next());
+            }
             System.out.println(csvTable.toString());
         }catch (SQLException e){
             Log.v("CSV export error:",e.toString());

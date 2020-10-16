@@ -32,7 +32,7 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
     private TextView message;
     private String path;
     private  int linesRead=0;
-
+    private StringBuffer loaded;
 
     /**
      * Constructor
@@ -53,8 +53,10 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
 
     @Override
     protected void onPreExecute(){
-        //p.setVisibility(View.VISIBLE);
-        text.setText(" ");
+        p.setVisibility(View.VISIBLE);
+        message.setVisibility(View.VISIBLE);
+        loaded=new StringBuffer();
+        text.setText("");
     }
 
     /**
@@ -71,8 +73,6 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));
             String line;
-            StringBuffer loaded=new StringBuffer();
-
 
             while((line=br.readLine())!=null){
 
@@ -84,14 +84,10 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
                 // care here to react and run the code that cancels!
                 if (isCancelled()) break;
 
-
                 loaded.append(line);
                 loaded.append("\n");
                 linesRead++;
 
-                publishProgress(loaded);
-
-                if (linesRead>=50) break;
                 // Wait a few seconds
                 // If I didn't the list was not build in the right order.....
                 try{
@@ -120,7 +116,7 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
     protected void onProgressUpdate (StringBuffer ... s){
         super.onProgressUpdate();
         text.append(s[0]);
-        message.setText(linesRead+" Zeile gelesen");
+        message.setText(linesRead+" Zeilen gelesen");
     }
 
     /**
@@ -131,7 +127,9 @@ public class LoadText extends AsyncTask<String,StringBuffer,String> {
 
     @Override
     protected void onPostExecute (String result){
-        //p.setVisibility(View.GONE);
+        text.setText(loaded);
+        p.setVisibility(View.GONE);
+        message.setVisibility(View.GONE);
 
     }
 }

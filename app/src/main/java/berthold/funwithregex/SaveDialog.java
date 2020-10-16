@@ -8,7 +8,7 @@ package berthold.funwithregex;
  * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
  * https://creativecommons.org/licenses/by-nc-sa/4.0/
  *
- * Last modified 9/3/18 8:30 AM
+ * Last modified 11/27/18 9:44 AM
  */
 
 /**
@@ -28,6 +28,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
 
 
 public class SaveDialog extends AppCompatActivity implements FragmentCustomDialogYesNo.getDataFromFragment{
@@ -47,7 +50,7 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
 
     private String savePath;
 
-    private SaveText saver;
+    private SaveText saveText;
 
     // Debug
     private String tag;
@@ -56,8 +59,8 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
     private static final int SAVE_FILE=1;
     private static final int CONFIRM_TEXT_SAVE_LOC=2;
 
-    private boolean SHOW_CONFIRM_SAVE_AT=false;
-    private boolean SHOW_CONFIRM_OVERWRITE=false;
+    private boolean SHOW_CONFIRM_SAVE_AT;
+    private boolean SHOW_CONFIRM_OVERWRITE;
 
     private static final int NOT_REQUIERED=-1;
 
@@ -96,7 +99,6 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
         saveToFileLocally.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Intent i = new Intent(v.getContext(), FileChooserDeluxe.class);
                 i.putExtra(FileChooserDeluxe.MY_TASK_FOR_TODAY_IS,FileChooserDeluxe.SAVE_FILE);
                 i.putExtra("path",MainActivity.workingDir);
@@ -169,13 +171,10 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
                     // Just the folder, ask user for filename
                     if (returnStatus.equals(FileChooserDeluxe.JUST_THE_FOLDER_PICKED)) {
                         Log.v(tag,": Just folder picked....");
-                        SHOW_CONFIRM_SAVE_AT=true;
                         SHOW_CONFIRM_OVERWRITE=false;
+                        SHOW_CONFIRM_SAVE_AT=true;
                     }
                 }
-
-                //saver = new SaveText(sampleText.getText().toString(),getApplicationContext(),progressBar, savePath+"/" + "Text.txt");
-                //saver.execute();
             }
         }
     }
@@ -192,7 +191,7 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
         if (SHOW_CONFIRM_SAVE_AT){
             showConfirmDialog(CONFIRM_TEXT_SAVE_LOC,
                     FragmentCustomDialogYesNo.SHOW_WITH_EDIT_TEXT,
-                    getResources().getString(R.string.confirm_dialog_save_at),
+                    getResources().getString(R.string.confirm_save_text_at),
                     getResources().getString(R.string.confirm_save_at),
                     getResources().getString(R.string.cancel_save));
         }
@@ -220,22 +219,34 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
         // Existing file will be overwritten or a new file will be created
         // depending on the users choice in previously shown confirm dialog.
         if(reqCode==CONFIRM_TEXT_SAVE_LOC){
-            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)){
-                Log.v(tag," Button:"+buttonPressed);
+            File f=new  File(savePath+"/"+filename);
 
-                SaveText saveText=null;
-                if (SHOW_CONFIRM_OVERWRITE) // Folder and file was picked, so, overwrite file....
-                    saveText=new SaveText(sampleText.getText().toString(),getApplicationContext(),null,savePath);
-                if (SHOW_CONFIRM_SAVE_AT) // Just the folder picked, so, add flename to path....
-                    saveText=new SaveText(sampleText.getText().toString(),getApplicationContext(),null,savePath+"/"+filename);
+            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_OK_PRESSED)) {
+                saveText = null;
 
-                // Save!
+                // User choose an existing file and he want's it to be overwritten
+                if (SHOW_CONFIRM_OVERWRITE)  // Folder and file was picked, so, overwrite file....
+                    saveText = new SaveText(sampleText.getText().toString(), getApplicationContext(), null, savePath);
+
+                // User choose location for file to save at, append file obtained from dialog fragment and
+                // append it to path.
+                if (SHOW_CONFIRM_SAVE_AT) {
+                    if (!f.exists()) {
+                        // Choosen filename does not exist, save file.
+                        saveText = new SaveText(sampleText.getText().toString(), getApplicationContext(), null, savePath + "/" + filename);
+                        System.out.println("Sample:" + sampleText.getText());
+                    } else {
+                        // If user coose a filename of an existing file, then change it, and do not overwrite
+                        // existing file!
+                        // @todo Improve: Open dialog, allow user to change filename or overwrite existing one
+                        saveText = new SaveText(sampleText.getText().toString(), getApplicationContext(), null, savePath + "/" + filename + "_NEW");
+                        Toast.makeText(getApplicationContext(), "Die Datei " + filename + " gibt es schon. Neuer Dateiname:" + filename + "_NEW. Alte Datei bleibt!", Toast.LENGTH_LONG).show();
+                    }
+                }
                 saveText.execute();
             }
-
-            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_CANCEL_PRESSED)){
+            if (buttonPressed.equals(FragmentCustomDialogYesNo.BUTTON_CANCEL_PRESSED))
                 Log.v(tag," Button:"+buttonPressed);
-            }
         }
     }
 
@@ -246,7 +257,10 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
 
     private void initUI() {
 
-        sampleText.setText(" ");
+        SHOW_CONFIRM_OVERWRITE=false;
+        SHOW_CONFIRM_SAVE_AT=false;
+
+        sampleText.setText("");
 
         if (attachRegex.isChecked()){
             sampleText.setText("Angewendete Regex:\n");
@@ -275,7 +289,7 @@ public class SaveDialog extends AppCompatActivity implements FragmentCustomDialo
     {
         FragmentManager fm = getSupportFragmentManager();
         FragmentCustomDialogYesNo fragmentDeleteRegex =
-                FragmentCustomDialogYesNo.newInstance(reqCode,NOT_REQUIERED,kindOfDialog,null,dialogText,confirmButton,cancelButton);
+                FragmentCustomDialogYesNo.newInstance(reqCode,kindOfDialog,NOT_REQUIERED,null,dialogText,confirmButton,cancelButton);
         fragmentDeleteRegex.show(fm, "fragment_dialog");
     }
 

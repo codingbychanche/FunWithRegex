@@ -80,7 +80,6 @@ public class InsertRegexInDB extends AppCompatActivity {
         // Preset
         if (myTaskIs.equals(UPDATE_ENTRY)) {
             key1 = r.getInt("key1");
-            Log.v("Key1:","--"+key1);
             // Gets entry and updates editText's
             getEntry(key1);
         }
@@ -105,7 +104,7 @@ public class InsertRegexInDB extends AppCompatActivity {
                     if (!regexInput.getText().toString().trim().equals("")) {
                         // Does an DB entry for this regex already exist?
                         if (!DB.doesExist("regex", "regexstring", regexInput.getText().toString().trim(), MainActivity.conn)) {
-                            saveRegex(regexInput.getText().toString(), description.getText().toString());
+                            saveRegex(regexInput.getText().toString(), description.getText().toString(),(int)rbar.getRating());
                         } else
                             Toast.makeText(getApplicationContext(), "Diese Regex gibt es schon. Nichts gespeichert", Toast.LENGTH_LONG).show();
                     } else {
@@ -117,9 +116,9 @@ public class InsertRegexInDB extends AppCompatActivity {
                 if (myTaskIs.equals(UPDATE_ENTRY)){
                     String theRegex=regexInput.getText().toString();
                     String descr=description.getText().toString();
-                    int rat=rbar.getProgress();
-
-                    updateEntry(key1,theRegex,descr,rat);
+                    float rat=rbar.getRating();
+                    Log.v("RATING:",""+rat);
+                    updateEntry(key1,theRegex,descr,(int)rat);
                 }
             }
         });
@@ -132,9 +131,10 @@ public class InsertRegexInDB extends AppCompatActivity {
      * @param description
      */
 
-    private void saveRegex(String regex, String description) {
-        DB.insert("insert into regex (regexstring,description,date) values " +
-                "('" + regex + "','" + description + "',CURRENT_TIMESTAMP)", MainActivity.conn);
+    private void saveRegex(String regex, String description,int rating) {
+        // @rem:SQL, shows how today's date (current_timestamp) can be inserted into DB@@
+        DB.insert("insert into regex (regexstring,description,date,rating) values " +
+                "('" + regex + "','" + description + "',CURRENT_TIMESTAMP,"+rating+")", MainActivity.conn);
 
         Toast.makeText(getApplicationContext(), "Regex gespeichert", Toast.LENGTH_LONG).show();
         finish();
@@ -148,7 +148,7 @@ public class InsertRegexInDB extends AppCompatActivity {
     private void updateEntry(int key1,String regex,String coment,int rating)
     {
         try {
-            MainActivity.conn.createStatement().executeUpdate("update regex set regexstring='"+regex+"',description='"+coment+"',rating=" + (int) rating + ",date=CURRENT_TIMESTAMP where key1=" + key1);
+            MainActivity.conn.createStatement().executeUpdate("update regex set regexstring='"+regex+"',description='"+coment+"',rating=" +rating + ",date=CURRENT_TIMESTAMP where key1=" + key1);
         }catch(SQLException e){
             Log.v("Sql Error:",e.toString());
         }

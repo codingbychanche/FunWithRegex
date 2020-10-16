@@ -39,12 +39,13 @@
         android:id="@+id/rating"
         android:layout_below="@id/date"
         android:paddingLeft="20dp"
-        android:scaleY=".6"
-        android:scaleX=".6"
+        android:scaleY=".5"
+        android:scaleX=".5"
         android:transformPivotX="0dp"
         android:transformPivotY="0dp"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:isIndicator="true"
         android:numStars="5"
         android:stepSize="1"/>
 
@@ -63,6 +64,7 @@
     <ImageButton
         android:id="@+id/delete_this_entry"
         android:layout_below="@+id/rating"
+        android:paddingLeft="20dp"
         android:layout_toRightOf="@+id/edit_this_entry"
         android:scaleX=".8"
         android:scaleY=".8"

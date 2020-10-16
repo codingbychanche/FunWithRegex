@@ -19,7 +19,7 @@
     <!-- Activity's -->
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/java_regex"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
@@ -41,11 +41,13 @@
             android:name=".InsertRegexInDB"
             android:label="@string/title_activity_insert_regex_in_db"
             android:theme="@style/AppTheme.NoActionBar" />
+
         <activity android:name=".FileChooserDeluxe">
             android:name=".FileChooser"
             android:label="@string/titel_activity_file_cooser"
             android:theme="@style/AppTheme.NoActionBar" />
         </activity>
+
         <activity
             android:name=".SaveDialog"
             android:label="@string/titel_save_dialog" />

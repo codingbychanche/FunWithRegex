@@ -86,7 +86,9 @@ public class FragmentCustomDialogYesNo extends DialogFragment {
     // THE INTERFACE
     //
     // This is the interface used to pass data from the
-    // this fragment to it's activity
+    // fragment to it's activity
+    //
+    // todo: remove data!
     //
     public interface getDataFromFragment{
         void getDialogInput(int reqCode,int data,String dialogText, String buttonPressed);

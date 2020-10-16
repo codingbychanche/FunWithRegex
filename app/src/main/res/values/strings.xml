@@ -5,8 +5,7 @@
     <!-- Main Activity -->
     <string name="regexinfo">Deine Regex</string>
 
-    <string name="switchertrue">Ganzer Text</string>
-    <string name="switcherfalse">Ergebnisse</string>
+    <string name="switcher">Text/Ergebnisse</string>
 
     <string name="sampletext">07245-2701  berthold.fritz@hotmail.com</string>
     <string name="errormessage">Meldungen</string>
@@ -17,7 +16,7 @@
     <string name="dbloaded">Datenbank erfolgreich geöffnet....</string>
     <string name="title_activity_regex_picker">Regex Zoo, wähle....</string>
 
-    <string name="back_button_warning">Wenn Sie nocheinmal auf BACK drücken, wird die APP verlassen, alle nicht gespeicherten Daten gehen verloren....</string>
+    <string name="back_button_warning">Wenn Sie nocheinmal auf BACK drücken, wird die APP verlassen.</string>
 
     <string name="delete_regex_dialog">Regex geändert, aber nicht gespeichert. Möchten Sie diese Regex wirklich löschen?</string>
     <string name="delete_text_dialog">Der text wurde geändert, aber nicht gespeichert. Möchten Sie den Text wirklich löschen?</string>
@@ -30,7 +29,7 @@
     <string name="yes_button">Löschen!</string>
     <string name="no_button">Nicht löschen!</string>
 
-    <string name="leave_warning">Wenn Sie das nächste mal Back drücken, wird diese App verlassen. Nicht gespeicherte Daten gehen verloren.</string>
+    <string name="leave_warning">Wenn Sie das nächste mal Back drücken, wird diese App verlassen.</string>
 
 
     <!-- Menu -->
@@ -95,6 +94,7 @@
     Suchergebnis an den gespeicherten Text an. </string>
     <string name="text_saved">Text gespeichrt.....</string>
     <string name="save_sample_text_hint">Vorschau</string>
+    <string name="confirm_save_text_at">Möchten Sie den Text hier speichern?</string>
 
     <!-- Export csv- dialog -->
 

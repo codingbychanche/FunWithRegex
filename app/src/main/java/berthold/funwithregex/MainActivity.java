@@ -16,16 +16,14 @@ package berthold.funwithregex;
  */
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.TextWatcher;
-import android.text.style.BackgroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -34,28 +32,18 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.*;
+
 
 public class MainActivity extends AppCompatActivity implements FragmentCustomDialogYesNo.getDataFromFragment {
 
     // UI
-    ProgressBar     searchProgress;
+    ProgressBar     loadProgress;
     ImageButton     run;
     ImageButton     delteText;
     ImageButton     magnifyText;
@@ -77,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     Button          insertCurlys;
     Button          insertComma;
     Button          insertBracket;
+    Button          insertMinus;
     Button          insertCarret;
     Button          insertBackSlash;
     Button          insertFwdSlash;
@@ -120,6 +109,13 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     // Debug
     String          tag;
 
+    // Shared preferences
+    SharedPreferences sharedPreferences;
+
+    // If this is true, regex is restored from shared preferences.
+    // If it is false, regex was picked from list....
+    boolean regexWasNotPicked;
+
     // File system
     public static File workingDir;
     public String appDir="/";       // App's working dir..
@@ -134,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     protected void onCreate(Bundle savedInstanceState) {
 
         // Debug
-        tag="Debug: Main";
+        tag=MainActivity.class.getSimpleName();
 
         Log.v(tag,"On Create...");
 
@@ -149,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         // Will be set to true, when saved.
         regexWasSaved=true;
         textWasSaved=true;
+        regexWasNotPicked=true;
 
         // Current regex was not insert from DB to edit. It is a new one and a new
         // entry will be created when the user presses the save- button.
@@ -161,13 +158,6 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
 
         // Text size
         textSize=20;
-
-        // @rem:Get instance state@@
-        if (savedInstanceState!=null) {
-            regexWasSaved = savedInstanceState.getBoolean("regexWasSaved");
-            regexInsertFromDB=savedInstanceState.getBoolean("regexInsertFromDB");
-            textWasSaved = savedInstanceState.getBoolean("textWasSaved");
-        }
 
         // Create DB
         // This is our regex library.....
@@ -213,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         theRegex=(EditText)findViewById(R.id.the_regex);
 
         testText=(EditText)findViewById(R.id.test_text);
+        loadProgress=(ProgressBar)findViewById(R.id.load_progress);
 
         delteText=(ImageButton)findViewById(R.id.delete_text);
         textViewSwitcher=(Switch)findViewById(R.id.switchresult);
@@ -227,13 +218,13 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         messageText=(TextView) findViewById(R.id.messages);
         lineBelowMessage=(View) findViewById(R.id.line_below_message);
         run=(ImageButton)findViewById(R.id.run);
-        // searchProgress=(ProgressBar)findViewById(R.id.progress);
 
         insertRegexFromDB=(ImageButton)findViewById(R.id.insert_regex_from_db);
         insertRegexIntoDB=(ImageButton) findViewById(R.id.insert_regex_into_db);
 
         delRegex=(ImageButton)findViewById(R.id.deleteRegexInput);
         insertCurlys=(Button)findViewById(R.id.curly);
+        insertMinus=(Button)findViewById(R.id.minus);
         insertPara=(Button)findViewById(R.id.para);
         insertComma=(Button)findViewById(R.id.comma);
         insertBracket=(Button)findViewById(R.id.bracket);
@@ -252,15 +243,12 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         super.onResume();
         Log.v(tag,"On Resume.....");
 
+        // Get last state....
+        restoreFromSharedPreferences();
+
         // Hide message window as there is no message to be shown yet...
         // Vissibility will be set when there is something to output...
         hideMessageWindow();
-
-        // Buttons and Actions
-        final String switcherTrue="Ganzer Text";
-        final String switcherFalse="Nur die Ergebnisse";
-        if (textViewSwitcher.isChecked()) textViewSwitcher.setText(switcherTrue);
-        else textViewSwitcher.setText(switcherFalse);
 
         testText.setTextSize(textSize);
 
@@ -277,11 +265,9 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked){
-                    textViewSwitcher.setText(switcherTrue);
                     justResult.setVisibility(View.GONE);
                     testText.setVisibility(View.VISIBLE);
                 } else {
-                    textViewSwitcher.setText(switcherFalse);
                     justResult.setVisibility(View.VISIBLE);
                     testText.setVisibility(View.GONE);
                 }
@@ -308,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             @Override
             public void onClick(View v) {
                 stopAllTasks();
-                regexRunner=new RunRegex(theRegex,testText,justResult,messageText,lineBelowMessage,searchProgress);
+                regexRunner=new RunRegex(theRegex,testText,justResult,messageText,lineBelowMessage,loadProgress);
                 regexRunner.execute();
             }
         });
@@ -438,6 +424,22 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
             }
         });
 
+        // Insert minus
+        insertMinus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                theRegex.getText().insert(theRegex.getSelectionStart(),"-");
+            }
+        });
+
+        // Insert minus
+        insertCarret.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                theRegex.getText().insert(theRegex.getSelectionStart(), "^");
+            }
+        });
+
         // Insert forwardslash
         insertFwdSlash.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -518,9 +520,8 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
                 final String path=data.getExtras().getString("path");
 
                 stopAllTasks();
-                justResult.setText(" ");
 
-                loader=new LoadText(testText,messageText,searchProgress,path);
+                loader=new LoadText(testText,messageText,loadProgress,path);
                 loader.execute();
 
                 textWasSaved=true;
@@ -536,13 +537,13 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         if (resCode==RESULT_OK && reqCode==GET_REGEX){
 
             if (data.hasExtra("theRegex")) {
-
                 final String regex = data.getExtras().getString("theRegex");
                 key1=data.getExtras().getInt("key1");
                 theRegex.setText(regex);
                 hideMessageWindow();
                 regexWasSaved=true;
                 regexInsertFromDB=true;
+                regexWasNotPicked=false;
             }
         }
     }
@@ -605,12 +606,39 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     @Override
     protected void onSaveInstanceState (Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("theRegex",theRegex.getText().toString());
-        outState.putString("testText",testText.getText().toString());
-        outState.putBoolean("regexWasSaved",regexWasSaved);
-        outState.putBoolean("textWasSaved",textWasSaved);
-        outState.putBoolean("regexInsertFromDB",regexInsertFromDB);
+        saveSettings();
         Log.v(tag,"State saved.....");
+    }
+
+    /**
+     * Save current settings in shared preferences
+     */
+    public void saveSettings()
+    {
+        sharedPreferences=getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        editor.putString("theRegex",theRegex.getText().toString());
+        editor.putString("testText",testText.getText().toString());
+        editor.putBoolean ("regexWasSaved",regexWasSaved);
+        editor.putBoolean("regexInsertFromDB",regexInsertFromDB);
+        editor.putFloat("textSize",textSize);
+        editor.commit();
+    }
+
+    /**
+     * Restore from shared preferences
+     *
+     */
+    public void restoreFromSharedPreferences()
+    {
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        if (regexWasNotPicked)
+            theRegex.setText(sharedPreferences.getString("theRegex",""));
+
+        regexInsertFromDB=sharedPreferences.getBoolean("regexInsertFromDB",regexInsertFromDB);
+        testText.setText(sharedPreferences.getString("testText",""));
+        regexWasSaved=sharedPreferences.getBoolean("regexWasSaved",regexWasSaved);
+        textSize=sharedPreferences.getFloat("textSize",textSize);
     }
 
     /**
@@ -638,7 +666,10 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
     public void onBackPressed()
     {
         timesBackPressed++;
-        if(timesBackPressed>1) finish();
+        if(timesBackPressed>1){
+            saveSettings();
+            finish();
+        }
         else Toast.makeText(getApplicationContext(),getResources().getString(R.string.leave_warning),Toast.LENGTH_LONG).show();
 
     }
@@ -696,6 +727,7 @@ public class MainActivity extends AppCompatActivity implements FragmentCustomDia
         regexInsertFromDB=false;
         hideMessageWindow();
         removeHighlightFromTestText();
+        saveSettings();
     }
 
     /**

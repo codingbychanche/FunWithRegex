@@ -1,10 +1,19 @@
-/**
+/*
  *  Data model for each row in our file list
- *
- *  @author  Berthold Fritz 2017
  */
 
 package berthold.funwithregex;
+
+/*
+ * FileListOneEntry.java
+ *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 8/26/18 10:21 PM
+ */
 
 import android.graphics.Bitmap;
 
@@ -26,7 +35,7 @@ public class FileListOneEntry {
      * Constructor, assign properties
      */
 
-    FileListOneEntry(int entryType, Bitmap fileSymbol,String fileName,String filePath,boolean isReadable,String lastModified) {
+    FileListOneEntry(int entryType, Bitmap fileSymbol, String fileName, String filePath, boolean isReadable, String lastModified) {
 
         this.entryType=entryType;
         this.fileSymbol=fileSymbol;

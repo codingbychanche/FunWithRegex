@@ -1,6 +1,4 @@
-/**
- * <b>File Picker Deluxe</b>
- *
+/*
  * Lets the user browse the devices file system and returns the selected files path.
  *
  * This version shows how 'FilePicker' can be used from another activity and how
@@ -8,14 +6,24 @@
  * it works.
  *
  * This is version uses a custom- list view to display the file system in a neat way
- *
- * @author  Berthold Fritz
- * @date    3/2018
  */
 
 package berthold.funwithregex;
 
+/*
+ * FileChooserDeluxe.java
+ *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 12/18/18 11:32 PM
+ */
+
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
@@ -24,7 +32,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -43,9 +50,10 @@ public class FileChooserDeluxe extends AppCompatActivity {
     private ActionBar ab;
 
     // Filesystem
-    private File currentPath;                                       // The current path
-    private String root;                                            // Initial path, root if not specified via extras
-    private File [] fileObjects;                                    // Contains the current folder's files as file- objects in the same order as 'directory'
+    private File currentPath;                       // The current path
+    private String root="/";                        // Initial path, root if not specified via extras
+    private String lastPathVisited;                 // Path left during previous session
+    private File[] fileObjects;                    // Contains the current folder's files as file- objects in the same order as 'directory'
 
     // List view
     private FileListAdapter myListAdapter=null;
@@ -58,10 +66,9 @@ public class FileChooserDeluxe extends AppCompatActivity {
 
     // Return values
     // One or mor of these values may be written to the bundles 'Extras' when
-    // the activity is finished. Which depends on the task this activity was given by
+    // the activity is finished. Which, depends on the task this activity was given by
     // the caller.
-
-    public String status;
+    public String status="empty";
     public static final String RETURN_STATUS="status";
     public static final String FOLDER_AND_FILE_PICKED="folderAndFilePicked";
     public static final String JUST_THE_FOLDER_PICKED="justFolder";
@@ -71,33 +78,39 @@ public class FileChooserDeluxe extends AppCompatActivity {
     // extra's. Supported key/ value pairs are listed here.
     //
     // Alway's set the string "MY_TASK_FOR_TODAY_IS" as the key. Choose one of the listed
-    // values to perform the dessiered action
+    // key- values to perform the desired action
+    private String myTaskForTodayIs;
+    public static final String MY_TASK_FOR_TODAY_IS="myTaskForTodayIs";
 
-    private String                  myTaskForTodayIs;       // Tasks are saved in this string upon 'onCreate'
-    public static final String      MY_TASK_FOR_TODAY_IS="myTaskForTodayIs"; // Key...
-
-        // This flag must be set!
+        // Value
         // It tells the activity to act like a simple dir viewer. The activity will return the
         // full path of the file selected.
-
         public static final String GET_FILE_NAME_AND_PATH="getFileAndPath";
 
-        // If this flag is set upon creation, the calling requests a path
-        // in order to write a file. If set, the folowing happens here:
+        // If this flag is set, the calling activity requests a path
+        // in order to write a file. If set, the following happens here:
         //
-        //  1.  a save button is displayed. When pressed, the activity returns
+        //  1.  A save button is displayed. When pressed, the activity returns
         //      to the calling activity and provides the path which was displayed when
         //      the button was pressed. Now the caller can proceed and save it's data...
         //
         //  2.  When a file was picked, the full path is returned to the calling
         //      activity. A flag is returned, telling the caller, that a file was
-        //      selected. The caller can ask the user of he want's to replace this file...
+        //      selected. The caller now can ask the user if he want's to replace this file...
         //
-        //  If this flag was not set, the activity act's as a directory disply tool which
+        //  If this flag was not set, the activity act's as a directory display tool which
         //  returns each readable file the user picked.
+        public static final String SAVE_FILE="saveFile";
 
-        public static final String      SAVE_FILE="saveFile";                    // Value
+    // Override last path visited
+    // If pass this key with value 'true' if you do not wish fileCooser to open
+    // the path which was opened when last session was finished
+    public static final String OVERRIDE_LAST_PATH_VISITED="overrideLastPathVisited";
+    private Boolean overrideLastPathVisited=false;
 
+    // Shared pref's
+    // Last folder visited is saved here as an convenience for the user....
+    SharedPreferences sharedPreferences;
 
     /**
      * Activity starts here...
@@ -118,7 +131,6 @@ public class FileChooserDeluxe extends AppCompatActivity {
         // The string 'myTaskForTodayIs' contains the task to be performed (e.g. 'SAVE_FILE')
         Bundle extra=getIntent().getExtras();
         myTaskForTodayIs = extra.getString(MY_TASK_FOR_TODAY_IS);
-        Log.v("---","--My task is:"+myTaskForTodayIs);
 
         // UI
 
@@ -135,34 +147,53 @@ public class FileChooserDeluxe extends AppCompatActivity {
         myListAdapter=new FileListAdapter(this,dir);
         myListView.setAdapter(myListAdapter);
 
-        // Get current path, directory as string array and as file object- list
+        // Get current path from calling activity
         if(extra.get("path")!=null) root=extra.get("path").toString();
-        Log.v("--- Working Dir",root);
-        currentPath=new File (root);
-        refreshFiles(currentPath,myListAdapter);
+        if(extra.get(OVERRIDE_LAST_PATH_VISITED)!=null) {
+            overrideLastPathVisited = extra.getBoolean(OVERRIDE_LAST_PATH_VISITED);
+            Log.v("COOSER", "--" + overrideLastPathVisited);
+        }
+        // If previously a path was saved, get it and use passed path as default.
+        // This is convenient for the user because he always returns to the folder he
+        // previously left by either selecting a file or pressing the back/ up button.
+        if (!overrideLastPathVisited) {
+            sharedPreferences = getPreferences(MODE_PRIVATE);
+            root = sharedPreferences.getString("lastPathVisited", root);
+        }
+
+        currentPath = new File(root);
+        refreshFiles(currentPath, myListAdapter);
 
         // List view
         myListView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                    // If a file was selected, get it's full path name and return to
-                    // the calling activity
-                    if (fileObjects[position].isFile() && fileObjects[position].canRead()){
-                        currentPath=fileObjects[position].getAbsoluteFile();
-                        status=FOLDER_AND_FILE_PICKED;
-                        finishIt();
-                    }
+                // If a file was selected, get it's full path name and return to
+                // the calling activity
+                if (fileObjects[position].isFile() && fileObjects[position].canRead()){
 
-                    // If list item is a directory, show it's files
-                    if (fileObjects[position].isDirectory()) {
+                    // Save path from which this file was picked from
+                    // Current path does not contain a file name yet.....
+                    lastPathVisited=currentPath.toString();
 
-                        // File should be readable and it should exist (e.g. folder 'sdcard')
-                        // it might be shown but it could not be mounted yet. In that case
-                        // it does not exist :-)
-                        if(fileObjects[position].canRead() && fileObjects[position].exists()) {
+                    // Get current path+ file and return to calling activity
+                    currentPath=fileObjects[position].getAbsoluteFile();
+                    status=FOLDER_AND_FILE_PICKED;
+                    finishIt();
+                }
 
+                // If list item is a directory, show it's files
+                if (fileObjects[position].isDirectory()) {
+
+                    // File should be readable and it should exist (e.g. folder 'sdcard')
+                    // it might be shown but it could not be mounted yet. In that case
+                    // it does not exist :-)
+                    if(fileObjects[position].canRead() && fileObjects[position].exists()) {
                             // Get path and display it
                             currentPath = fileObjects[position].getAbsoluteFile();
+
+                            // Update last path visited
+                            lastPathVisited=currentPath.toString();
                             ActionBar ab=getSupportActionBar();
                             ab.setSubtitle(currentPath.toString());
 
@@ -170,32 +201,9 @@ public class FileChooserDeluxe extends AppCompatActivity {
                             // Update listView => show changes
                             refreshFiles(currentPath,myListAdapter);
                             myListAdapter.notifyDataSetChanged();
-
-                        }
                     }
                 }
-        });
-
-        //Set list on onnScrollListener
-        //Here you can check which the first visible item is and how many
-        //items are visible
-        myListView.setOnScrollListener(new AbsListView.OnScrollListener() {
-
-            int first,last;
-
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-                // ToDo: How can we update just the items, that are visible....?
-                System.out.println("----updating from:"+first+"   to:"+last);
             }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                System.out.println("OnScroll:"+firstVisibleItem+"    #ofItems"+visibleItemCount);
-                first=firstVisibleItem;
-                last=firstVisibleItem+visibleItemCount;
-            }
-
         });
 
         // Save button
@@ -233,6 +241,23 @@ public class FileChooserDeluxe extends AppCompatActivity {
     }
 
     /**
+     * If Back button was pressed
+     *
+     * @rem:Shows how to check if the back button was pressed@@
+     *
+     * This makes shure, that, even if the bacl- button was pressed
+     * file picker is finished via it's on finish method....
+     *
+     */
+
+    @Override
+    public void onBackPressed()
+    {
+        lastPathVisited=currentPath.toString();
+        finishIt();
+    }
+
+    /**
      * Options menu
      *
      * @param   menu
@@ -256,9 +281,10 @@ public class FileChooserDeluxe extends AppCompatActivity {
         // If up button was pressed, move to parent dir or leave activity if
         // we are already at "/"
         if (id == R.id.goup) {
-            if (currentPath.toString().equals(root)){
+            if (currentPath.toString().equals("/")){
                 // Cancel async task, if picture thumbnails for the
                 // current dir are created....
+
                 finishIt();
             } else {
                 File parent = currentPath.getParentFile();
@@ -276,21 +302,22 @@ public class FileChooserDeluxe extends AppCompatActivity {
          *
          */
 
-        private void refreshFiles (File path,FileListAdapter a)
+        private void refreshFiles (File path, FileListAdapter a)
         {
             if (task!=null) task.cancel(true);
             // Get all file objects of the current path
             File files=new File(path.getPath());
-            File []fo=files.listFiles();
+            File[]fo=files.listFiles();
             // Sort by kind, and do not show files that are not readable
+            Log.v("--- FileObjects fo","="+fo.length);
             fileObjects=SortFiles.byKind(fo);
+            Log.v("FileObjects fileObjects","="+fileObjects.length);
 
             // Clear dir array
             a.clear();
             progress=(ProgressBar)findViewById(R.id.pbar);
-            task=new FileListFillerV5(a, fileObjects, 0,fileObjects.length,getApplicationContext(),progress);
+            task=new FileListFillerV5(a, fileObjects,getApplicationContext(),progress);
             task.execute();
-
             return;
         }
 
@@ -302,13 +329,21 @@ public class FileChooserDeluxe extends AppCompatActivity {
         public void finishIt()
         {
             task.cancel(true);
+
             // Enter the caller class's name here (second parameter)
             Intent i=new Intent(FileChooserDeluxe.this,MainActivity.class);
             i.putExtra("path",currentPath.toString());
 
             // Set return status
             i.putExtra(RETURN_STATUS, status);
-            Log.v("------", "Picked "+status);
+
+            // Save current path to android's 'shared preferences'
+            // This ensures that the user always returns to the last folder
+            // visited.
+            sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("lastPathVisited", lastPathVisited);
+            editor.commit();
 
             // That's it....
             setResult(RESULT_OK,i);

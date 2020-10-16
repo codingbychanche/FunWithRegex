@@ -1,5 +1,16 @@
 package berthold.funwithregex;
 
+/*
+ * SaveText.java
+ *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 11/10/18 11:01 PM
+ */
+
 /**
  * Save Text
  *
@@ -14,8 +25,10 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 
 public class SaveText extends AsyncTask<String,StringBuffer,String> {
 
@@ -25,6 +38,7 @@ public class SaveText extends AsyncTask<String,StringBuffer,String> {
     private ProgressBar p;
     private String text;
     private String path;
+    private FileOutputStream fo;
 
     private String finalMessage="";
 
@@ -49,6 +63,9 @@ public class SaveText extends AsyncTask<String,StringBuffer,String> {
     protected void onPreExecute()
     {
         if (p!=null) p.setVisibility(View.VISIBLE);
+        try {
+            fo = new FileOutputStream(path);
+        }catch (Exception e){}
     }
 
     /**
@@ -63,24 +80,18 @@ public class SaveText extends AsyncTask<String,StringBuffer,String> {
         // @rem:This is an example on how to view debug- info with class name in monitor@@
         tag=SaveText.class.getSimpleName();
 
-        Log.v (tag,text);
-
         finalMessage="Gespeichert...."; // Will be overwritte with error message if something gone wrong....
 
         if (!isCancelled()) {
             try {
-                //FileOutputStream fo=c.openFileOutput(path,Context.MODE_PRIVATE);
-                FileOutputStream fo = new FileOutputStream(path);
-                //BufferedWriter fo=new BufferedWriter(new FileWriter(path));
+                Log.v(tag,"SAVE");
                 fo.write(text.getBytes());
-                fo.close();
-
                 Log.v(tag, " Saving to:" + path);
 
                 // Wait a few seconds
                 // If I didn't the list was not build in the right order.....
                 try {
-                    Thread.sleep(550);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {}
 
             } catch (Exception e) {
@@ -115,6 +126,10 @@ public class SaveText extends AsyncTask<String,StringBuffer,String> {
     @Override
     protected void onPostExecute (String result){
         if (p!=null) p.setVisibility(View.GONE);
+        Log.v(tag,finalMessage);
         Toast.makeText(c,finalMessage, Toast.LENGTH_LONG).show();
+        try {
+            fo.close();
+        }catch (IOException e){}
     }
 }

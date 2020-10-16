@@ -1,14 +1,23 @@
-/**
+/*
  * Adapter class for File- list
  *
  * This code creates each row of our list, each time a new entry
  * is added.
- *
- * @author  Berthold Fritz 2016
  */
 
 
 package berthold.funwithregex;
+
+/*
+ * FileListAdapter.java
+ *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 8/26/18 10:21 PM
+ */
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -25,7 +34,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-public class FileListAdapter extends ArrayAdapter <FileListOneEntry> {
+public class FileListAdapter extends ArrayAdapter<FileListOneEntry> {
 
     DecimalFormat df=new DecimalFormat("#,###,###");
 
@@ -33,7 +42,7 @@ public class FileListAdapter extends ArrayAdapter <FileListOneEntry> {
      * Constructor
      */
     
-    public FileListAdapter(Context context, ArrayList <FileListOneEntry> FileListOneEntry) {
+    public FileListAdapter(Context context, ArrayList<FileListOneEntry> FileListOneEntry) {
         super (context,0, FileListOneEntry);
     }
 
@@ -42,7 +51,7 @@ public class FileListAdapter extends ArrayAdapter <FileListOneEntry> {
      */
 
     @Override
-    public  View getView (int position, View convertView, ViewGroup parent) {
+    public View getView (int position, View convertView, ViewGroup parent) {
 
             final FileListOneEntry item = getItem(position);
 
@@ -83,9 +92,7 @@ public class FileListAdapter extends ArrayAdapter <FileListOneEntry> {
                 // Set last modified date
                 final TextView d = (TextView) convertView.findViewById(R.id.lastmodified);
                 d.setText(item.lastModified);
-
             }
-
         return convertView;
     }
 }

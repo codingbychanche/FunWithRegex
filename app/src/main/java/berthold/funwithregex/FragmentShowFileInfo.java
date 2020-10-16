@@ -1,10 +1,20 @@
-package berthold.funwithregex;
-
-/**
+/*
  * Show file info
  *
- * Show's preview of the selected file's thumpnail
+ * Show's preview of the selected file's thumbnail
+ */
+
+package berthold.funwithregex;
+
+/*
+ * FragmentShowFileInfo.java
  *
+ * Created by Berthold Fritz
+ *
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 12/18/18 11:32 PM
  */
 
 import android.graphics.Bitmap;
@@ -16,19 +26,23 @@ import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-/**
- * Created by Berthold on 1/13/18.
- */
-
 public class FragmentShowFileInfo extends DialogFragment {
 
-    ImageView   screenShoot;
-    Bitmap      pic;
-    String      filePath;
+    // UI
+    ImageView screenShoot;
+    View colorBelowPic;
+    Bitmap pic;
+    String filePath;
     ProgressBar progress;
+
+    ImageButton quit;
+    ImageButton nextPic;
+    ImageButton lastPic;
+
     static FragmentShowFileInfo frag;
 
     public FragmentShowFileInfo(){
@@ -47,7 +61,7 @@ public class FragmentShowFileInfo extends DialogFragment {
 
     // Listener Interface
     public interface FragmentEditNameListener{
-        void onFinishEditDialog(String text);
+        void onFinishEditDialog(String BottonPressed);
     }
 
     // Inflate fragment layout
@@ -61,9 +75,22 @@ public class FragmentShowFileInfo extends DialogFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Ui
         screenShoot=(ImageView) view.findViewById(R.id.screen_shot);
+        colorBelowPic=(View)view.findViewById(R.id.color_below_pic);
         progress=(ProgressBar) view.findViewById(R.id.progress);
+        quit=(ImageButton) view.findViewById(R.id.quit_preview);
+        nextPic=(ImageButton)view.findViewById(R.id.next_pic);
+        lastPic=(ImageButton)view.findViewById(R.id.last_pic);
         final Handler h=new Handler();
+
+        // Buttons
+        quit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               dismiss();
+            }
+        });
 
         //filePath=getArguments().getString("filePath");
         filePath=getArguments().getString("filePath");
@@ -74,9 +101,8 @@ public class FragmentShowFileInfo extends DialogFragment {
             public void run() {
 
                 pic=null;
-                do{
-                    pic=BitmapFactory.decodeFile(filePath);
-                    //pic=BitmapFactory.decodeResource(getResources(),R.drawable.camera,null);
+                    do{
+                    pic= BitmapFactory.decodeFile(filePath);
                     h.post(new Runnable() {
                         @Override
                         public void run() {
@@ -87,7 +113,7 @@ public class FragmentShowFileInfo extends DialogFragment {
                     // Wait a vew millisec's to enable the main UI thread
                     // to react.
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(10);
                     } catch (InterruptedException e) {}
 
                 } while (pic==null);
@@ -98,9 +124,16 @@ public class FragmentShowFileInfo extends DialogFragment {
                     public void run() {
                         screenShoot.setImageBitmap(pic);
                         progress.setVisibility(View.GONE);
-                        frag.getView().setBackgroundColor(MyBitmapTools.getDominantColorAtBottom(pic));
 
+                        int color=MyBitmapTools.getDominatColorAtTop(pic);
+                        int colorBottom=MyBitmapTools.getDominantColorAtBottom(pic);
+                        frag.getView().setBackgroundColor(color);
+                        quit.setBackgroundColor(color);
+                        screenShoot.setBackgroundColor(color);
 
+                        colorBelowPic.setBackgroundColor(colorBottom);
+                        nextPic.setBackgroundColor(colorBottom);
+                        lastPic.setBackgroundColor(colorBottom);
                     }
                 });
             }

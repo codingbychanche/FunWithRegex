@@ -64,18 +64,29 @@
             android:layout_width="match_parent"
             android:background="@color/colorSepparator"
             android:layout_height="5dp"/>
-
-        <ImageButton
-            android:id="@+id/save_csv_localy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_save"/>
-
-        <ProgressBar
-            android:id="@+id/exportCSV"
-            android:visibility="gone"
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
+
+            <ImageButton
+                android:id="@+id/save_csv_localy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_menu_save"/>
+
+            <ImageButton
+                android:id="@+id/export_csv_by_mail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_dialog_email"/>
+
+            <ProgressBar
+                android:id="@+id/exportCSV"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
         </LinearLayout>
     </android.support.design.widget.CoordinatorLayout>

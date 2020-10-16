@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@color/colorShellOutput"
+    android:fitsSystemWindows="true"
     tools:context="berthold.funwithregex.MainActivity">
 
     <!-- This is a "fake layout" which surpresses keyboard to pop up -->
@@ -96,6 +96,7 @@
 
             <Switch
                 android:id="@+id/switchresult"
+                android:text="@string/switcher"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="right"
@@ -106,6 +107,13 @@
                 android:shadowColor="@color/shellText"/>
 
         </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/load_progress"
+            android:visibility="gone"
+            android:layout_centerInParent="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -124,10 +132,13 @@
                 android:background="@color/colorShellOutput">
 
 
+
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/colorShellOutput">
+
+
 
                     <EditText
                         android:id="@+id/test_text"
@@ -201,6 +212,7 @@
 
         <!-- Input and edit 'regex' field -->
         <!--    Pivot: Set it to top, left corner Scale whole layout...-->
+        <!-- @rem: Example on how to scale layout elements down or up.@@ -->
 
         <GridLayout
             android:layout_width="match_parent"
@@ -247,7 +259,7 @@
                 android:text="[..]"/>
 
             <Button
-                android:id="@+id/hyphen"
+                android:id="@+id/minus"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
                 android:text="-"/>

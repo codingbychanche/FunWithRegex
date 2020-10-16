@@ -1,19 +1,22 @@
-package berthold.funwithregex;
-
-/**
- * Directory filler V5
- *
- * This is variation of 'FileListFillerV4'
- *
- * Motivation: First load and show file names, then add pictures and show them.
+/*
+ * First load and show file names, then add pictures and show them.
  *
  * The file names are loaded and shown faster. After that the progress of loading
  * the picture files - which can be slow - is started and while pictures are
  * added the user can already browse the files....
+ */
+
+package berthold.funwithregex;
+
+/*
+ * FileListFillerV5.java
  *
- *  THIS VERSION WILL BE MAINTAINED! OTHER VERSIONS WILL NOT!!!!!
+ * Created by Berthold Fritz
  *
- *  @author  Berthold Fritz 2017
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
+ *
+ * Last modified 12/18/18 11:32 PM
  */
 
 import android.content.Context;
@@ -23,13 +26,12 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import java.io.File;
 import java.util.Date;
 
-public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> {
+public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry, String> {
 
     public Bitmap fileSym;
     public Bitmap file;
@@ -51,8 +53,6 @@ public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> 
     private static final int JUST_PICTURES=2;
     private int state;
 
-    private ListView myListView;
-    private int firstVissibleitem,lastVissibleItem;
     private Handler h;
 
     /**
@@ -61,13 +61,11 @@ public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> 
      * Creates a new filler object
      */
 
-    FileListFillerV5(FileListAdapter dir, File[] fileObjects,int firstVissibleitem,int lastVissibleItem,Context c, ProgressBar p) {
+    FileListFillerV5(FileListAdapter dir, File[] fileObjects, Context c, ProgressBar p) {
         this.c = c;
         this.dir = dir;
         this.fileObjects = fileObjects;
         this.p=p;
-        this.firstVissibleitem=firstVissibleitem;
-        this.lastVissibleItem=lastVissibleItem;
     }
 
     /**
@@ -86,25 +84,27 @@ public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> 
      */
 
     @Override
-    protected String doInBackground(String ... params){
+    protected String doInBackground(String... params){
 
         // Debug
         tag=FileListFillerV5.class.getSimpleName();
 
-        Log.v (tag,"Getting file names and adding them to our list....");
         state=JUST_FILENAMES;
-            for (i = firstVissibleitem; i <= lastVissibleItem - 1; i++) {
+        for (i = 0; i <=fileObjects.length-1; i++) {
 
-                if (isCancelled()) break;
+            if (isCancelled()) break;
 
-                // Create row and add to custom list
-                // Set file symbol accordingly
-                // This is the default for files:
-                fileSym = BitmapFactory.decodeResource(c.getResources(), R.drawable.document);
+            // Create row and add to custom list
+            // Set file symbol accordingly
+            // This is the default for files:
+            fileSym = BitmapFactory.decodeResource(c.getResources(), R.drawable.document);
+
+            if (fileObjects[i]!=null) {
 
                 // Check if file is a picture...
+                Log.v(tag, "File Object is:" + i + " contains:" + fileObjects[i]);
                 if (isPictureFile.check(fileObjects[i].getName()))
-                      fileSym = BitmapFactory.decodeResource(c.getResources(), R.drawable.camera);
+                    fileSym = BitmapFactory.decodeResource(c.getResources(), R.drawable.camera);
 
                 // Check if it is a directory....
                 if (fileObjects[i].isDirectory())
@@ -117,23 +117,22 @@ public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> 
                     readable = true;
 
                 // Get File's last modificaton date
-                String d=new Date(new File (fileObjects[i].getAbsolutePath()).lastModified()).toString();
+                String d = new Date(new File(fileObjects[i].getAbsolutePath()).lastModified()).toString();
 
                 // Add file or folder name to list
-                FileListOneEntry e = new FileListOneEntry(FileListOneEntry.IS_ACTIVE, fileSym, fileObjects[i].getName(), fileObjects[i].getAbsolutePath(),readable,d);
+                FileListOneEntry e = new FileListOneEntry(FileListOneEntry.IS_ACTIVE, fileSym, fileObjects[i].getName(), fileObjects[i].getAbsolutePath(), readable, d);
                 publishProgress(e);
             }
+        }
 
         // Wait a few seconds
         // If I didn't the list was not build in the right order.....
         try{
-            Thread.sleep(500);
+            Thread.sleep(250);
         }catch (InterruptedException e){}
 
-        Log.v (tag," Adding pictures.....");
         state=JUST_PICTURES;
-
-        for (i=firstVissibleitem;i<=lastVissibleItem-1;i++){
+        for (i=0;i<=fileObjects.length-2;i++){
 
             // This is important!
             // If you miss to do this here, the class which created
@@ -144,28 +143,33 @@ public class FileListFillerV5 extends AsyncTask<String,FileListOneEntry,String> 
             if (isCancelled()) break;
 
             // If not canceled, go on....
-            FileListOneEntry e=dir.getItem(i);
+            if (fileObjects[i]!=null){
 
-            BitmapFactory.Options metaData = new BitmapFactory.Options();
-            metaData.inJustDecodeBounds = false;
-            metaData.inSampleSize = 1;
+                FileListOneEntry e=dir.getItem(i);
 
-            file=BitmapFactory.decodeFile(fileObjects[i].getAbsolutePath());
-            if (file!=null) { // Only if file contains image data
+                BitmapFactory.Options metaData = new BitmapFactory.Options();
 
-                // Uncommend whichever picture format you like....
-                //fileSym=MyBitmapTools.toRoundedImage(MyBitmapTools.scaleBitmap(file, 200, 200),null);
-                // todo: If I comment this and use "file" and not "fileSymbol" then an unusal error is displayed
-                fileSym = MyBitmapTools.toRectangle(MyBitmapTools.scaleBitmap(file, 200, 200,e.fileName));
+                // Calc sample size of image according to it's size
+                // We do this in order to reduce the images memory footprint
+                int sampleSize;
+                metaData.inJustDecodeBounds = true;
+                file= BitmapFactory.decodeFile(fileObjects[i].getAbsolutePath(),metaData);
+                sampleSize=MyBitmapTools.calcSampleSize(metaData.outWidth,metaData.outHeight,200,200);
+                metaData.inSampleSize = sampleSize;
 
-                // Add bitmap to list view and publish.....
-                e.fileSymbol=fileSym;
-
-                publishProgress(e);
+                // Now set sample size and get images data from file
+                metaData.inJustDecodeBounds=false;
+                file= BitmapFactory.decodeFile(fileObjects[i].getAbsolutePath(),metaData);
+                if (file!=null) { // Only if file contains image data
+                    // Add bitmap to list view and publish.....
+                    e.fileSymbol = file;
+                    publishProgress(e);
+                }
             }
         }
         return "Done";
     }
+
 
     /**
      * Update UI- thread

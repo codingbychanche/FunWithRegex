@@ -1,13 +1,19 @@
+/*
+ * @rem:A collection of gfx algorithm's@@
+ *
+ */
+
 package berthold.funwithregex;
 
-/**
- * Bitmap Tools
+/*
+ * MyBitmapTools.java
  *
- * A collection of gfx algorithm's
+ * Created by Berthold Fritz
  *
- * @author  Berthold Fritz 2017
+ * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/
  *
- * 11/2017
+ * Last modified 12/18/18 11:32 PM
  */
 
 import android.graphics.Bitmap;
@@ -23,11 +29,34 @@ public class MyBitmapTools {
     static String tag=MyBitmapTools.class.getSimpleName();
 
     /**
+     * Calculate sample size.
+     *
+     * @rem: Calculates proper sample size for bitmaps according to their width and height.@@
+     * @rem: This is the recomented method by google to reduce the bitmaps memory footprint.@@
+     * @rem: Theory: The more the size is reduced, the more data compression can be done.@@
+     *
+     */
+
+    public static int calcSampleSize(int height,int width,int outHeight,int outWidth)
+    {
+        int sampleSize=1;
+
+        if(height>outHeight || width>outWidth) {
+            while ((height > outHeight) && (width > outWidth)) {
+                height = height / 2;
+                width = width / 2;
+                sampleSize = sampleSize * 2;
+            }
+        }
+        return sampleSize;
+    }
+
+    /**
      * Scale bitmap
      *
      * Scales a bitmap and keeps it's aspect ratio
      *
-     * ToDo: Gets wrong result when the sestination size is bigger then the source size.....
+     * ToDo: Gets wrong result when the destination size is bigger then the source size.....
      *
      * @param b         Bitmap to be scaled
      * @param destW     New size
@@ -35,7 +64,7 @@ public class MyBitmapTools {
      * @return          Scaled bitmap
      */
 
-    public static Bitmap scaleBitmap(Bitmap b,float destW,float destH,String fileName){
+    public static Bitmap scaleBitmap(Bitmap b, float destW, float destH, String fileName){
 
         // Calculate new width and height, keep aspect ratio
         float sourceRatio;
@@ -64,7 +93,7 @@ public class MyBitmapTools {
         Log.v(tag,"Name:"+fileName+"Ratio:"+sourceRatio+" source width "+sourceW+"   source height"+sourceH);
 
         // Scale picture to screen size
-        Bitmap changedBitmap=Bitmap.createScaledBitmap(b,(int)destW,(int)destH,false);
+        Bitmap changedBitmap= Bitmap.createScaledBitmap(b,(int)destW,(int)destH,false);
         Log.v(tag,"Src dpi:"+b.getDensity() +"  Destination picture => Ratio:"+sourceRatio+"  destW "+(int)destW+"   destH "+(int)destH);
 
         return changedBitmap;
@@ -113,15 +142,12 @@ public class MyBitmapTools {
      *
      */
 
-    public static Bitmap toRoundedImage(Bitmap b,DisplayMetrics m)
+    public static Bitmap toRoundedImage(Bitmap b, DisplayMetrics m)
     {
         // Create a mutable bitmap
-        Bitmap changedBitmap=Bitmap.createBitmap(m,b.getWidth(),b.getHeight(),Bitmap.Config.ARGB_8888);
-
-        // Create a round Image
+        Bitmap changedBitmap= Bitmap.createBitmap(m,b.getWidth(),b.getHeight(), Bitmap.Config.ARGB_8888);
 
         // Calc max rad for pic
-
         int radius;
 
         int width=b.getWidth();         // Size
@@ -192,11 +218,11 @@ public class MyBitmapTools {
      *
      */
 
-    public static Bitmap toMonocrome (Bitmap b,float thr,DisplayMetrics m)
+    public static Bitmap toMonocrome (Bitmap b, float thr, DisplayMetrics m)
     {
         // Create a mutable bitmap
 
-        Bitmap changedBitmap=Bitmap.createBitmap(m,b.getWidth(),b.getHeight(),Bitmap.Config.ARGB_8888);
+        Bitmap changedBitmap= Bitmap.createBitmap(m,b.getWidth(),b.getHeight(), Bitmap.Config.ARGB_8888);
 
 
         int width=b.getWidth();         // Size
@@ -269,10 +295,10 @@ public class MyBitmapTools {
      *
      */
 
-    public static Bitmap toPixelatedImage(Bitmap b,DisplayMetrics m,int pixelSize)
+    public static Bitmap toPixelatedImage(Bitmap b, DisplayMetrics m, int pixelSize)
     {
         // Create a mutable bitmap
-        Bitmap changedBitmap=Bitmap.createBitmap(m,b.getWidth(),b.getHeight(),Bitmap.Config.ARGB_8888);
+        Bitmap changedBitmap= Bitmap.createBitmap(m,b.getWidth(),b.getHeight(), Bitmap.Config.ARGB_8888);
 
         int width=b.getWidth();         // Size
         int height=b.getHeight();

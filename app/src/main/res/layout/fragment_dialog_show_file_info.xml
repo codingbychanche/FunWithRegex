@@ -1,19 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ fragment_dialog_show_file_info.xml
+  ~
+  ~ Created by Berthold Fritz
+  ~
+  ~ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
+  ~ https://creativecommons.org/licenses/by-nc-sa/4.0/
+  ~
+  ~ Last modified 8/30/18 5:24 PM
+  -->
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/show_pricture"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_centerInParent="true">
 
-    <ImageView
-        android:id="@+id/screen_shot"
-        android:adjustViewBounds="true"
-        android:layout_height="500dp"
-        android:layout_width="800dp"
-        android:scaleType="fitCenter"/>
-    <ProgressBar
-        android:id="@+id/progress"
-        android:layout_centerInParent="true"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/quit_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/screen_shot"
+                android:adjustViewBounds="true"
+                android:layout_height="match_parent"
+                android:layout_width="800dp"
+                android:scaleType="fitCenter"/>
+            <ProgressBar
+                android:id="@+id/progress"
+                android:layout_centerInParent="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <View
+                android:id="@+id/color_below_pic"
+                android:layout_below="@+id/screen_shot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </View>
+
+            <LinearLayout
+                android:layout_below="@+id/screen_shot"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/last_pic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_media_rew"/>
+
+                <ImageButton
+                    android:id="@+id/next_pic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_media_ff"/>
+            </LinearLayout>
+
+        </RelativeLayout>
+    </LinearLayout>
+
 </RelativeLayout>

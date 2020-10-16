@@ -8,7 +8,7 @@ package berthold.funwithregex;
  * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
  * https://creativecommons.org/licenses/by-nc-sa/4.0/
  *
- * Last modified 10/26/18 8:56 PM
+ * Last modified 12/5/18 7:24 AM
  */
 
 /**
@@ -53,6 +53,11 @@ public class RegexListAdapter extends ArrayAdapter <ListEntryRegexList> {
 
     /**
      * View holder
+     *
+     * @rem:This is an example on how the 'view holder'- pattern works@@
+     * @rem:Before inflating list rows layout, we check if it needs to be inflated or@@
+     * @rem:if we just need to update the data (from the data model)@@
+     * @rem:According to the official documaentation this should speed up list view's@@
      */
 
     private class Holder{
@@ -112,7 +117,7 @@ public class RegexListAdapter extends ArrayAdapter <ListEntryRegexList> {
         holder.theRegex.setText(item.theRegexString);
         holder.description.setText(item.description);
         holder.date.setText(item.date);
-        holder.rating.setProgress(item.rating);
+        holder.rating.setRating(item.rating);
 
         // Buttons in each row
         // Delete this entry????
@@ -145,27 +150,10 @@ public class RegexListAdapter extends ArrayAdapter <ListEntryRegexList> {
                 in.putExtra("key1",holder.key1);
                 in.putExtra("regexString",holder.theRegex.getText().toString());
                 context.startActivity(in);
+
+                // @rem:Shows how a reference to an existing class can be constructed (interface pattern)@@
+                ((RegexPicker)getContext()).editButtonInsideRegexListWasPressed();
                 ((Activity)getContext()).finish();
-            }
-        });
-
-        // Rating bar changed....
-        holder.rating.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-             Log.v ("---", "key:"+holder.key1+"  Progress:"+ratingBar.getProgress());
-
-                // Insert new rating into db entry
-                try {
-                    MainActivity.conn.createStatement().executeUpdate ("update regex set rating="+(int)rating+" where key1="+holder.key1);
-                    ListEntryRegexList e=listEntry.get(position);
-                    e.rating=(int)rating;
-                    listEntry.set(position,e);
-
-                } catch (Exception e){
-                    Log.v("---"," uuuuups "+e.toString());
-                }
-
             }
         });
 

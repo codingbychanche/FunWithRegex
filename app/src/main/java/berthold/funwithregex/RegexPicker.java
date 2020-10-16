@@ -17,6 +17,7 @@ package berthold.funwithregex;
  * Shows a list of regex'es and lets the user pick one of them
  * to test....
  *
+ *
  */
 
 import android.content.Context;
@@ -36,7 +37,7 @@ import android.widget.Toast;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class RegexPicker extends AppCompatActivity implements FragmentCustomDialogYesNo.getDataFromFragment {
+public class RegexPicker    extends     AppCompatActivity implements  FragmentCustomDialogYesNo.getDataFromFragment, EditButtonInsideRegexListWasPressed {
 
     // Toolbar
     private Toolbar toolbar;
@@ -77,7 +78,6 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         // UI
         showSorting=(TextView)findViewById(R.id.info_text);
 
@@ -95,17 +95,7 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
 
         // Get saved instance state
         searchQuery="";     // Empty shows=> show all DB entry's
-        if (savedInstanceState != null) searchQuery=savedInstanceState.getString("searchTerm");
-
         orderBy="date";
-
-        // @rem:Get instance state@@
-        // @rem:Should be done in 'OnCreate()'
-        if (savedInstanceState!=null) {
-            sortingOrder = savedInstanceState.getString("sortingOrder");
-            orderBy=savedInstanceState.getString("orderBy");
-            searchQuery = savedInstanceState.getString("searchTerm");
-        }
     }
 
     /**
@@ -118,22 +108,20 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
     {
         super.onResume();
 
-
         // @rem:Get shared preferences@@
         // @rem:Should be done in 'onResume'@@
         // @rem:Reason, this way this is executed when the activity was left and restarted@@
         // @rem:In 'onCreate()' it would only executed after the activity was destroyed by the@@
         // @rem:system and then restarted@@
-        // @rem:Semms to be best practice to do it...@@
-        sharedPreferences=getPreferences(MODE_PRIVATE);
-        searchQuery=sharedPreferences.getString("searchQuerry",searchQuery);
-        sortingOrder=sharedPreferences.getString("sortingOrder",sortingOrder);
-        orderBy=sharedPreferences.getString("orderBy",orderBy);
+        // @rem:Semms to be best practice to do it this way.@@
+        // Shared preferences
+        restoreFromSharedPreferences();
 
         // Update list
         updateRegexList(regexListAdapter,orderBy,sortingOrder);
 
     }
+
     /**
      * The menu, located in action bar...
      *
@@ -160,7 +148,8 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
             }
 
             //Get search field input......
-            public boolean onQueryTextSubmit (String searchQuery) {
+            public boolean onQueryTextSubmit (String sq) {
+                searchQuery=sq;
                 Log.v(tag + "-----Query Submitted", searchQuery);
                 updateRegexList(regexListAdapter,orderBy,sortingOrder);
                 return true;
@@ -240,9 +229,7 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
     @Override
     protected void onSaveInstanceState (Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("searchTerm",searchQuery);
-        outState.putString("sortingOrder",sortingOrder);
-        outState.putString("orderBy",orderBy);
+        saveSettings();
     }
 
     /**
@@ -251,12 +238,25 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
 
     public void saveSettings()
     {
-        sharedPreferences=getPreferences(Context.MODE_PRIVATE);
+        sharedPreferences=getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor=sharedPreferences.edit();
         editor.putString("searchQuerry",searchQuery);
         editor.putString("sortingOrder",sortingOrder);
         editor.putString("orderBy",orderBy);
+        Log.v(tag,"SEARCH"+searchQuery);
         editor.commit();
+    }
+
+    /**
+     * Restore from shared preferences
+     *
+     */
+    public void restoreFromSharedPreferences()
+    {
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        searchQuery=sharedPreferences.getString("searchQuerry",searchQuery);
+        sortingOrder=sharedPreferences.getString("sortingOrder",sortingOrder);
+        orderBy=sharedPreferences.getString("orderBy",orderBy);
     }
 
     /**
@@ -264,7 +264,7 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
      *
      */
 
-    private void updateRegexList(RegexListAdapter regexListAdapter, String orderBy, String sortingOrder){
+   public void updateRegexList(RegexListAdapter regexListAdapter, String orderBy, String sortingOrder){
         Log.v(tag," Updating list");
         if (filler!=null) filler.cancel(true);
         filler=new RegexListFiller(regexListAdapter,getApplicationContext(),orderBy,searchQuery,sortingOrder);
@@ -296,6 +296,17 @@ public class RegexPicker extends AppCompatActivity implements FragmentCustomDial
         showSorting.setText(infoText.toString());
 
         return;
+    }
+
+    /**
+     * If 'Edit Button' inside list view was pressed...
+     */
+
+    @Override
+    public void editButtonInsideRegexListWasPressed()
+    {
+        Log.v(tag,"Edit Button was pressed. Saving state......");
+        saveSettings();
     }
 
     /**
